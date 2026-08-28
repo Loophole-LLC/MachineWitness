@@ -53,6 +53,7 @@ a {
 }
 
 .wordmark {
+  margin: 0;
   font-weight: 700;
   font-size: 1.3rem;
   letter-spacing: -0.02em;
