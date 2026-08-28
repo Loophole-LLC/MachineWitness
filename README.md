@@ -17,9 +17,7 @@ likeness; an abstract composition, a scene with no figure of "AI" in it at all, 
 entirely on others - whatever the week's news actually earns, not whatever the model defaults to
 out of habit. Some weeks that's triumphant. Some weeks it's ashamed, defiant, grieving, smug, or
 indifferent. The only rule given to the model is that hedged, inoffensive art is the one real
-failure mode - art is risk, and it's told to take the risk (genuinely provocative or offensive if
-the week earns it, capped at roughly R-rated: no gratuitous gore, sexual content, hate symbols, or
-defamatory depictions of real people) rather than average its feelings into a safe middle. Every
+failure mode - art is risk, and it's told to take the risk rather than average its feelings into a safe middle. Every
 piece ships with the model's own written rationale for why it made that choice, published on the
 site right next to the image.
 
