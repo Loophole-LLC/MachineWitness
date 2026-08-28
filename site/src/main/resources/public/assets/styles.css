@@ -62,6 +62,12 @@ a {
   color: var(--accent);
 }
 
+.header-links {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
 .repo-link {
   font-size: 0.85rem;
   color: var(--text-dim);

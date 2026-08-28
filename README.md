@@ -1,5 +1,7 @@
 # Render
 
+**Live at [renderweekly.art](https://renderweekly.art).**
+
 An experiment in giving an AI a mirror. Every week, this project pulls every feed in the [Alan
 Turing Institute's curated OPML list of AI industry RSS
 feeds](https://github.com/alan-turing-institute/ai-rss-feeds) - currently Anthropic, Ai2,
