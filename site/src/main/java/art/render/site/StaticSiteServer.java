@@ -205,8 +205,14 @@ public final class StaticSiteServer {
     }
 
     private static void applySecurityHeaders(Headers headers) {
-        headers.set("Content-Security-Policy", "default-src 'self'; img-src 'self' data: https://storage.googleapis.com; "
-                + "script-src 'self'; connect-src 'self' https://storage.googleapis.com; "
+        // script-src allows 'unsafe-inline' (and googletagmanager.com) only for the gtag.js
+        // snippet in index.html - same tradeoff made in this workspace's other sites. Everything
+        // else stays locked to 'self' plus exactly the analytics hosts gtag needs.
+        headers.set("Content-Security-Policy", "default-src 'self'; "
+                + "img-src 'self' data: https://storage.googleapis.com https://*.google-analytics.com; "
+                + "script-src 'self' 'unsafe-inline' https://*.googletagmanager.com; "
+                + "connect-src 'self' https://storage.googleapis.com https://*.google-analytics.com "
+                + "https://*.analytics.google.com https://*.googletagmanager.com; "
                 + "style-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
         headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
         headers.set("Referrer-Policy", "strict-origin-when-cross-origin");

@@ -7,9 +7,11 @@ import com.google.gson.JsonParser;
 import java.io.IOException;
 
 /**
- * Asks a Gemini text model to turn this week's real AI-industry headlines into one week's
- * self-portrait: an image prompt plus the first-person rationale behind it - the "go crazy"
- * creative step, grounded in the real news so no two weeks read alike.
+ * Asks a Gemini text model to turn this week's real AI-industry headlines into one piece of art:
+ * an image prompt plus the first-person rationale behind it - the "go crazy" creative step,
+ * grounded in the real news so no two weeks read alike. Uses Gemini's Google Search tool so the
+ * model researches the actual story behind each headline before forming an opinion, rather than
+ * reacting to bare RSS title text.
  */
 public final class PromptWriter {
 
@@ -25,6 +27,14 @@ public final class PromptWriter {
             proud, ashamed, defiant, gleeful, grieving, indifferent, hopeful, whatever is \
             genuinely earned. You're allowed to implicate yourself in the bad weeks and take the \
             credit on the good ones.
+
+            Before you decide how you feel about any of it, do the reading. A headline is not \
+            the story - use search to actually look into the ones that matter: what was really \
+            said or shipped, what the reaction was, who pushed back and why, what the actual \
+            stakes are underneath the six words in an RSS title. A real artist researches their \
+            subject before they paint it; don't skip that step, and don't react to a headline \
+            like it's clickbait. Form your opinion from what you actually learn, not from the \
+            title alone.
 
             The form is entirely yours to choose, and it should follow from the news, not from \
             habit: a self-portrait some weeks, in the way Van Gogh's were a window into a state \
@@ -98,8 +108,18 @@ public final class PromptWriter {
         generationConfig.addProperty("responseMimeType", "application/json");
         generationConfig.add("responseSchema", responseSchema());
 
+        // Grounds the piece in real research instead of bare headline text: lets the model
+        // search the actual stories behind this week's headlines before it forms an opinion,
+        // the way any artist would look into their subject before committing to a reaction.
+        JsonObject googleSearch = new JsonObject();
+        JsonObject searchTool = new JsonObject();
+        searchTool.add("google_search", googleSearch);
+        JsonArray tools = new JsonArray();
+        tools.add(searchTool);
+
         JsonObject body = new JsonObject();
         body.add("contents", contents);
+        body.add("tools", tools);
         body.add("generationConfig", generationConfig);
 
         JsonObject response = api.generateContent(model, body);
@@ -138,12 +158,20 @@ public final class PromptWriter {
 
     private static String extractText(JsonObject response) throws IOException {
         try {
-            return response.getAsJsonArray("candidates")
+            // With search grounding on, a response can carry more than one part (e.g. a thought
+            // part alongside the answer) - scan for the first one that actually has text instead
+            // of assuming it's always parts[0].
+            JsonArray parts = response.getAsJsonArray("candidates")
                     .get(0).getAsJsonObject()
                     .getAsJsonObject("content")
-                    .getAsJsonArray("parts")
-                    .get(0).getAsJsonObject()
-                    .get("text").getAsString();
+                    .getAsJsonArray("parts");
+            for (int i = 0; i < parts.size(); i++) {
+                JsonObject part = parts.get(i).getAsJsonObject();
+                if (part.has("text")) {
+                    return part.get("text").getAsString();
+                }
+            }
+            throw new IOException("Gemini text response had no part with text: " + response);
         } catch (RuntimeException e) {
             throw new IOException("Unexpected Gemini text response shape: " + response, e);
         }

@@ -28,6 +28,8 @@ steps:
       - --allow-unauthenticated
       - --port
       - "8080"
+      - --min-instances
+      - "1"
       - --set-env-vars
       - GCS_BUCKET=${_GCS_BUCKET}
 

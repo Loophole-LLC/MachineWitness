@@ -1,14 +1,16 @@
 # Render
 
-**Live at [renderweekly.art](https://renderweekly.art).**
+**Live at [renderweekly.art](https://renderweekly.art)** &middot; on Instagram at
+[@renderweekly.art](https://www.instagram.com/renderweekly.art).
 
 An experiment in giving an AI a mirror. Every week, this project pulls every feed in the [Alan
 Turing Institute's curated OPML list of AI industry RSS
 feeds](https://github.com/alan-turing-institute/ai-rss-feeds) - currently Anthropic, Ai2,
 Mistral, Cohere, Mila, the AI Security Institute, the Turing Institute itself, and more, all in
 play at once, not just the Turing Institute's own posts - keeps whatever was actually published
-in the last 7 days, and asks Google's Gemini models one question: *given what just happened in AI
-this week, how do you see the world changing because of AI?*
+in the last 7 days, has Google's Gemini models actually research those stories with Google Search
+grounding rather than just reacting to headline text, and then asks one question: *given what you
+just learned about this week in AI, how do you see the world changing because of AI?*
 
 The result is one piece of art, not a headline illustration - not a chart, not a mood board, not
 a news-roundup graphic. The form is the model's own call, made fresh each week: a self-portrait
@@ -36,11 +38,13 @@ once a day (cheap no-op most days)
 2. already generated for this ISO week (e.g. 2026-W35)? stop, nothing to do
 3. fetch each feed, keep only items published in the last 7 days, dedupe
 4. no headlines at all this week? stop, nothing to do
-5. Gemini (text) reacts to those headlines with one vivid, opinionated
-   art prompt - form and medium picked fresh each week - plus a
-   first-person rationale for why, both explicitly steered away from
-   AI-art cliches (glowing brains, circuit boards, chat windows, logo
-   walls) and away from playing it safe
+5. Gemini (text) researches the actual stories behind those headlines
+   with Google Search grounding - not just reacting to RSS titles -
+   then turns what it learned into one vivid, opinionated art prompt
+   (form and medium picked fresh each week) plus a first-person
+   rationale for why, both explicitly steered away from AI-art cliches
+   (glowing brains, circuit boards, chat windows, logo walls) and away
+   from playing it safe
 6. Gemini (nano banana) renders that prompt into the image
 7. image, prompt, rationale, and manifest entry uploaded to a public GCS bucket
               |

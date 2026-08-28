@@ -152,6 +152,11 @@ cd site
 gcloud builds submit --config cloudbuild.yaml --substitutions=_REGION=$REGION,_GCS_BUCKET=$BUCKET
 ```
 
+`cloudbuild.yaml` deploys with `--min-instances 1`, so one instance stays warm at all times -
+this avoids cold-start latency on the first request after idle, at the cost of that one instance
+always running. Drop the flag (or set it to `0`) if you'd rather scale to zero and accept
+occasional cold starts.
+
 If the build finishes with `Setting IAM policy failed`, Cloud Build's own service account
 usually lacks permission to grant public access on a freshly-created project - grant it directly:
 
