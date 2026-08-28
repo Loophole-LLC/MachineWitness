@@ -47,9 +47,10 @@ a {
 
 .site-header .wrap {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem 1rem;
 }
 
 .wordmark {
@@ -180,7 +181,6 @@ a {
 }
 
 .tagline {
-  max-width: 68ch;
   margin: 0;
   color: var(--text-dim);
   font-size: 0.95rem;
@@ -207,9 +207,6 @@ a {
   margin: 0 0 1rem;
 }
 
-.about p {
-  max-width: 68ch;
-}
 
 .gallery {
   padding: 2.5rem 0 3.5rem;

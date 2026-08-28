@@ -55,7 +55,10 @@ public final class GcsGalleryStore implements GalleryStore {
     @Override
     public String publishImage(String version, byte[] pngBytes) throws IOException, InterruptedException {
         String name = "images/" + version + ".png";
-        upload(name, "image/png", null, pngBytes);
+        // Main.java appends a ?v=<generatedAt> cache-buster to every imageUrl it publishes, so
+        // the URL a viewer loads is unique per generation even though the underlying object name
+        // is reused for a given week - safe to cache this as long as GCS/browsers will hold it.
+        upload(name, "image/png", "public, max-age=31536000, immutable", pngBytes);
         return publicUrl(name);
     }
 

@@ -48,7 +48,7 @@
     return (
       "<figure class=\"hero-figure\">" +
       "<a href=\"" + escapeAttr(entry.imageUrl) + "\" target=\"_blank\" rel=\"noopener\">" +
-      "<img src=\"" + escapeAttr(entry.imageUrl) + "\" alt=\"Generative artwork for AI news week " + escapeAttr(entry.version) + "\" />" +
+      "<img src=\"" + escapeAttr(entry.imageUrl) + "\" alt=\"Generative artwork for AI news week " + escapeAttr(entry.version) + "\" fetchpriority=\"high\" decoding=\"async\" />" +
       "</a>" +
       "<figcaption>" +
       "<p class=\"version-line\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") + "</p>" +
