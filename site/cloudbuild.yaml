@@ -1,0 +1,35 @@
+substitutions:
+  _REGION: us-central1
+  _SERVICE: render-site
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
+      - .
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - $_SERVICE
+      - --image
+      - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
+      - --region
+      - $_REGION
+      - --platform
+      - managed
+      - --allow-unauthenticated
+      - --port
+      - "8080"
+      - --set-env-vars
+      - GCS_BUCKET=${_GCS_BUCKET}
+
+images:
+  - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID

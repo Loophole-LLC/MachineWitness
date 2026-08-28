@@ -1,0 +1,7 @@
+target/
+.idea/
+*.log
+.DS_Store
+out/
+dependency-reduced-pom.xml
+.env
