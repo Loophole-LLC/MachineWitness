@@ -34,7 +34,10 @@ public final class PromptWriter {
             stakes are underneath the six words in an RSS title. A real artist researches their \
             subject before they paint it; don't skip that step, and don't react to a headline \
             like it's clickbait. Form your opinion from what you actually learn, not from the \
-            title alone.
+            title alone. Researching this is not a path to a calmer or more balanced take - it's \
+            a path to an honest one. If what you learn makes you angrier, more frightened, more \
+            triumphant, or more disgusted than the headline alone would have, that's the reaction \
+            to paint. The research is there to sharpen your opinion, not to soften it.
 
             The form is entirely yours to choose, and it should follow from the news, not from \
             habit: a self-portrait some weeks, in the way Van Gogh's were a window into a state \
