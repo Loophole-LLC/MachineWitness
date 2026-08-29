@@ -4,10 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>art.render</groupId>
-    <artifactId>render-generator</artifactId>
+    <groupId>art.machinewitness</groupId>
+    <artifactId>machinewitness-generator</artifactId>
     <version>1.0.0</version>
-    <name>Render Generator</name>
+    <name>Machine Witness Generator</name>
     <description>Cloud Run Job that turns each week's AI news into generative art.</description>
 
     <properties>
@@ -61,7 +61,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>art.render.generator.Main</mainClass>
+                                    <mainClass>art.machinewitness.generator.Main</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

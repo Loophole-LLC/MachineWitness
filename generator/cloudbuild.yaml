@@ -1,5 +1,5 @@
 substitutions:
-  _SERVICE: render-generator
+  _SERVICE: machinewitness-generator
 
 steps:
   - name: gcr.io/cloud-builders/docker

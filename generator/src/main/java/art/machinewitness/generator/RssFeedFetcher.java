@@ -1,4 +1,4 @@
-package art.render.generator;
+package art.machinewitness.generator;
 
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;

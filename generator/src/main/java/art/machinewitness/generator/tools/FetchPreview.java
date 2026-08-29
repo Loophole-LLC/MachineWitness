@@ -1,9 +1,9 @@
-package art.render.generator.tools;
+package art.machinewitness.generator.tools;
 
-import art.render.generator.FeedRef;
-import art.render.generator.NewsItem;
-import art.render.generator.OpmlSource;
-import art.render.generator.RssFeedFetcher;
+import art.machinewitness.generator.FeedRef;
+import art.machinewitness.generator.NewsItem;
+import art.machinewitness.generator.OpmlSource;
+import art.machinewitness.generator.RssFeedFetcher;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -13,7 +13,7 @@ import java.util.List;
  * Dev-only tool: prints what this week's OPML + RSS fetch would collect, with no Gemini calls
  * and no cost. Useful for sanity-checking the feed pipeline before spending on a real run.
  *
- * Usage: java -cp render-generator-1.0.0.jar art.render.generator.tools.FetchPreview [days]
+ * Usage: java -cp machinewitness-generator-1.0.0.jar art.machinewitness.generator.tools.FetchPreview [days]
  */
 public final class FetchPreview {
 

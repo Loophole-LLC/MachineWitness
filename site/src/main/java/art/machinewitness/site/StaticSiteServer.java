@@ -1,4 +1,4 @@
-package art.render.site;
+package art.machinewitness.site;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * Minimal static site server for the Render gallery, following the same plain-JDK HttpServer
+ * Minimal static site server for the Machine Witness gallery, following the same plain-JDK HttpServer
  * pattern used across other sites in this workspace: no framework, no database. The gallery
  * itself is rendered client-side by assets/site.js, which fetches manifest.json directly from
  * the public GCS bucket named by GCS_BUCKET - this server only needs to inject that bucket name
@@ -57,7 +57,7 @@ public final class StaticSiteServer {
         server.createContext("/", StaticSiteServer::serveStatic);
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         server.start();
-        System.out.printf("Render site listening on port %d%n", port);
+        System.out.printf("Machine Witness site listening on port %d%n", port);
     }
 
     private static void health(HttpExchange exchange) throws IOException {

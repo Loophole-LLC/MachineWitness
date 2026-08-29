@@ -4,11 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>art.render</groupId>
-    <artifactId>render-site</artifactId>
+    <groupId>art.machinewitness</groupId>
+    <artifactId>machinewitness-site</artifactId>
     <version>1.0.0</version>
-    <name>Render Site</name>
-    <description>Public Cloud Run service serving the Render gallery.</description>
+    <name>Machine Witness Site</name>
+    <description>Public Cloud Run service serving the Machine Witness gallery.</description>
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
@@ -35,7 +35,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>art.render.site.StaticSiteServer</mainClass>
+                                    <mainClass>art.machinewitness.site.StaticSiteServer</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

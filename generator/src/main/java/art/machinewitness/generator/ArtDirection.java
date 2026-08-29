@@ -1,4 +1,4 @@
-package art.render.generator;
+package art.machinewitness.generator;
 
 /**
  * One model's finished creative direction: the image prompt handed to the image model, the

@@ -1,4 +1,4 @@
-package art.render.generator;
+package art.machinewitness.generator;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

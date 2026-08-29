@@ -1,4 +1,4 @@
-package art.render.generator;
+package art.machinewitness.generator;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

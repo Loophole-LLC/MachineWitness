@@ -1,4 +1,4 @@
-package art.render.generator;
+package art.machinewitness.generator;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Entry point for the Render generator. Run on a schedule (Cloud Scheduler -> Cloud Run Job in
+ * Entry point for the Machine Witness generator. Run on a schedule (Cloud Scheduler -> Cloud Run Job in
  * production): once a week, pulls the last 7 days of headlines from the Turing Institute's AI
  * RSS feed list and asks Gemini, Claude, and ChatGPT to each independently turn them into their
  * own piece of art - same headlines, same instruction, three takes.

@@ -6,5 +6,5 @@ RUN mvn -B -DskipTests package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /workspace/target/render-generator-1.0.0.jar /app/app.jar
+COPY --from=build /workspace/target/machinewitness-generator-1.0.0.jar /app/app.jar
 CMD ["java", "-jar", "/app/app.jar"]

@@ -1,6 +1,6 @@
 substitutions:
   _REGION: us-central1
-  _SERVICE: render-site
+  _SERVICE: machinewitness-site
 
 steps:
   - name: gcr.io/cloud-builders/docker

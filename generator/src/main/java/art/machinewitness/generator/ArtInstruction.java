@@ -1,4 +1,4 @@
-package art.render.generator;
+package art.machinewitness.generator;
 
 /**
  * The single creative brief handed to every model in the weekly comparison - Gemini, Claude, and
