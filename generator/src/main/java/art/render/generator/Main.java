@@ -7,12 +7,15 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Entry point for the Render generator. Run on a schedule (Cloud Scheduler -> Cloud Run Job in
  * production): once a week, pulls the last 7 days of headlines from the Turing Institute's AI
- * RSS feed list and turns them into one new piece of art.
+ * RSS feed list and asks Gemini, Claude, and ChatGPT to each independently turn them into their
+ * own piece of art - same headlines, same instruction, three takes.
  */
 public final class Main {
 
@@ -74,21 +77,60 @@ public final class Main {
         WeeklyDigest digest = new WeeklyDigest(weekId, weekLabel, feedDigests, total);
         System.out.println("Found " + total + " headlines across " + feedDigests.size() + " sources for " + weekId);
 
-        System.out.println("Asking Gemini to make this week's piece...");
-        ArtDirection direction = new PromptWriter(config.geminiApiKey(), config.textModel()).write(digest);
-        System.out.println("Prompt: " + direction.prompt());
-        System.out.println("Rationale: " + direction.rationale());
+        Map<String, ArtDirectionWriter> writers = new LinkedHashMap<>();
+        writers.put("gemini", new GeminiArtDirectionWriter(config.geminiApiKey(), config.geminiModel()));
+        if (config.anthropicApiKey() != null && !config.anthropicApiKey().isBlank()) {
+            writers.put("claude", new ClaudeArtDirectionWriter(config.anthropicApiKey(), config.anthropicModel()));
+        } else {
+            System.out.println("Skipping Claude - no ANTHROPIC_API_KEY set.");
+        }
+        if (config.openaiApiKey() != null && !config.openaiApiKey().isBlank()) {
+            writers.put("chatgpt", new OpenAiArtDirectionWriter(config.openaiApiKey(), config.openaiModel()));
+        } else {
+            System.out.println("Skipping ChatGPT - no OPENAI_API_KEY set.");
+        }
 
-        System.out.println("Rendering the image with " + config.imageModel() + "...");
-        byte[] png = new ImageGenerator(config.geminiApiKey(), config.imageModel()).generate(direction.prompt());
-
+        ImageGenerator imageGenerator = new ImageGenerator(config.geminiApiKey(), config.imageModel());
         Instant generatedAt = Instant.now();
-        // Cache-bust with the generation time: GCS serves images/*.png with a default 1h cache,
-        // and every regeneration for a given week reuses the same object name, so without this a
-        // corrected/regenerated piece would keep showing viewers the stale cached PNG for up to
-        // an hour even after manifest.json (short-cached, and fetched cache-busted by site.js)
-        // had already moved on.
-        String imageUrl = store.publishImage(weekId, png) + "?v=" + generatedAt.toEpochMilli();
+        List<Piece> pieces = new ArrayList<>();
+        for (Map.Entry<String, ArtDirectionWriter> entry : writers.entrySet()) {
+            String slug = entry.getKey();
+            try {
+                System.out.println("Asking " + slug + " to make this week's piece...");
+                ArtDirection direction = entry.getValue().write(digest);
+                // A model that hits its token ceiling mid-response can come back with a
+                // technically-valid but garbage object (seen in testing: a cut-off prompt and a
+                // rationale of just ",") rather than throwing - catch that here too, not just
+                // exceptions.
+                if (direction.prompt().length() < 40 || direction.rationale().length() < 20) {
+                    throw new IllegalStateException("response looks truncated (prompt="
+                            + direction.prompt().length() + " chars, rationale="
+                            + direction.rationale().length() + " chars)");
+                }
+                System.out.println(direction.writtenBy() + " prompt: " + direction.prompt());
+                System.out.println(direction.writtenBy() + " rationale: " + direction.rationale());
+
+                System.out.println("Rendering " + direction.writtenBy() + "'s piece with " + config.imageModel() + "...");
+                byte[] png = imageGenerator.generate(direction.prompt());
+
+                // Cache-bust with the generation time: GCS serves images/*.png with a default 1h
+                // cache, and every regeneration for a given week reuses the same object name, so
+                // without this a corrected/regenerated piece would keep showing viewers the stale
+                // cached PNG for up to an hour even after manifest.json had already moved on.
+                String imageUrl = store.publishImage(weekId, slug, png) + "?v=" + generatedAt.toEpochMilli();
+                pieces.add(new Piece(direction.writtenBy(), direction.prompt(), direction.rationale(), imageUrl));
+            } catch (Exception e) {
+                // One provider's outage, billing issue, or bad response shouldn't cost the other
+                // two their completed work - skip it and publish whichever pieces did succeed.
+                System.out.println("Skipping " + slug + " this week - " + e.getMessage());
+            }
+        }
+
+        if (pieces.isEmpty()) {
+            System.out.println("No pieces were successfully generated this week - not publishing.");
+            return;
+        }
+
         List<String> highlights = feedDigests.stream()
                 .flatMap(feed -> feed.items().stream().map(item -> feed.sourceName() + ": " + item.title()))
                 .toList();
@@ -97,15 +139,13 @@ public final class Main {
                 weekLabel,
                 weekId,
                 "https://github.com/alan-turing-institute/ai-rss-feeds",
-                direction.prompt(),
-                direction.rationale(),
+                pieces,
                 highlights,
-                imageUrl,
                 generatedAt.toString()
         );
         manifest.prepend(entry);
         store.saveManifest(manifest);
 
-        System.out.println("Published new artwork for " + weekId + ": " + imageUrl);
+        System.out.println("Published " + pieces.size() + " piece(s) for " + weekId + ".");
     }
 }

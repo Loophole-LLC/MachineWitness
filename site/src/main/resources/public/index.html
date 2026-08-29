@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Render &mdash; weekly art by an AI, about AI</title>
-  <meta name="description" content="Every week, an AI researches real news from across the AI industry &mdash; Anthropic, Ai2, Mistral, and more &mdash; forms an opinion, and turns it into one piece of art. The good, the bad, and the ugly, with its own published rationale for why." />
+  <title>Render &mdash; 3 AIs react to the week in AI</title>
+  <meta name="description" content="Every week, Gemini, Claude, and ChatGPT each research real news from across the AI industry, form their own opinion, and turn it into art. The good, the bad, and the ugly, each with its own published rationale for why." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://renderweekly.art/" />
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
@@ -26,15 +26,15 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Render" />
   <meta property="og:url" content="https://renderweekly.art/" />
-  <meta property="og:title" content="Render &mdash; weekly art by an AI, about AI" />
-  <meta property="og:description" content="Every week, an AI researches real news from across the AI industry, forms an opinion, and turns it into one piece of art &mdash; the good, the bad, and the ugly, with its own published rationale for why." />
+  <meta property="og:title" content="Render &mdash; 3 AIs react to the week in AI" />
+  <meta property="og:description" content="Every week, Gemini, Claude, and ChatGPT each research real news from across the AI industry, form their own opinion, and turn it into art &mdash; the good, the bad, and the ugly, each with its own published rationale for why." />
   <meta property="og:image" content="https://renderweekly.art/assets/og-image.png?v={{ASSET_VERSION}}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Render &mdash; weekly art by an AI, about AI" />
-  <meta name="twitter:description" content="Every week, an AI researches real news from across the AI industry, forms an opinion, and turns it into one piece of art &mdash; the good, the bad, and the ugly, with its own published rationale for why." />
+  <meta name="twitter:title" content="Render &mdash; 3 AIs react to the week in AI" />
+  <meta name="twitter:description" content="Every week, Gemini, Claude, and ChatGPT each research real news from across the AI industry, form their own opinion, and turn it into art &mdash; the good, the bad, and the ugly, each with its own published rationale for why." />
   <meta name="twitter:image" content="https://renderweekly.art/assets/og-image.png?v={{ASSET_VERSION}}" />
 </head>
 <body data-gcs-bucket="{{GCS_BUCKET}}">
@@ -57,9 +57,9 @@
     <section class="intro">
       <div class="wrap">
         <p class="tagline">
-          Every week, an AI digs into the week's AI news, forms an opinion, and turns it into
-          art &mdash; good, bad, or ugly, nothing softened. Every piece ships with its own
-          written rationale.
+          Every week, Gemini, Claude, and ChatGPT each dig into the week's AI news and turn
+          their own opinion into art &mdash; good, bad, or ugly, nothing softened. Every piece
+          ships with its own written rationale.
           <a href="#about-full" class="more-link">More on how this works &darr;</a>
         </p>
       </div>
@@ -67,7 +67,7 @@
 
     <section class="hero">
       <div class="wrap">
-        <h2 class="eyebrow">This week's piece</h2>
+        <h2 class="eyebrow">This week's pieces</h2>
         <p id="next-piece" class="next-piece"></p>
         <div id="hero-art" class="hero-art" aria-live="polite">
           <p class="loading">Loading the latest generation&hellip;</p>
@@ -91,19 +91,22 @@
           Anthropic, Ai2, Mistral, Cohere, Mila, the AI Security Institute, the Alan Turing
           Institute, and more, all in play at once &mdash; maintained publicly as the
           <a href="https://github.com/alan-turing-institute/ai-rss-feeds" target="_blank" rel="noopener">Alan Turing Institute's AI RSS feed list</a>.
-          Whatever those sources actually published in the last 7 days goes in, and Google's
-          Gemini models research it - using live web search to read into the actual stories
-          behind the headlines, not just react to a title - before forming an opinion: given
-          what actually happened in AI this week, how does the AI see the world changing because
-          of AI right now? That opinion is what becomes the art. Not a headline collage, not a
-          chart &mdash; a self-portrait some weeks, an abstract composition or a scene with
-          no "AI" in it at all other weeks, whatever form and medium the week actually earns. The
-          good, the bad, and the ugly all count: breakthroughs, launches, scandals, backlash,
-          hype, whatever dominated, and the reaction can be proud, ashamed, defiant, or anything
-          in between &mdash; nothing is softened for politeness. Each piece ships with the AI's
-          own written rationale for why it chose to see things that way. No two weeks look alike,
-          and the art is only ever as calm or as chaotic as the news &mdash; and the reaction to
-          it &mdash; was.
+          Whatever those sources actually published in the last 7 days goes in, and three
+          separate models &mdash; Gemini, Claude, and ChatGPT &mdash; each research it
+          independently, using their own live web search to read into the actual stories behind
+          the headlines, not just react to a title, before forming an opinion: given what
+          actually happened in AI this week, how do you see the world changing because of AI
+          right now? Each model's opinion becomes its own piece, and every image is rendered by
+          Gemini's image model so the only variable between the three is the opinion, not the
+          medium. Not a headline collage, not a chart &mdash; a self-portrait some weeks, an
+          abstract composition or a scene with no "AI" in it at all other weeks, whatever form
+          and medium each model's news of the week actually earns. The good, the bad, and the
+          ugly all count: breakthroughs, launches, scandals, backlash, hype, whatever dominated,
+          and each model's reaction can be proud, ashamed, defiant, or anything in between
+          &mdash; nothing is softened for politeness. Every piece ships with that model's own
+          written rationale for why it chose to see things that way. No two weeks look alike,
+          and the three reactions each week are only ever as calm or as chaotic as the news
+          &mdash; and each model's take on it &mdash; was.
         </p>
       </div>
     </section>

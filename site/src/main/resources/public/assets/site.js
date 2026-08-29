@@ -9,8 +9,8 @@
   var dialogEl = document.getElementById("piece-dialog");
   var dialogBodyEl = document.getElementById("piece-dialog-body");
   var bucket = document.body.getAttribute("data-gcs-bucket");
-  var entriesByVersion = {};
-  var archiveEntries = [];
+  var piecesByKey = {};
+  var archiveItems = [];
   var archiveShown = 0;
 
   var nextPieceEl = document.getElementById("next-piece");
@@ -51,29 +51,51 @@
       return;
     }
 
-    entries.forEach(function (entry) {
-      entriesByVersion[entry.version] = entry;
-    });
-
     var latest = entries[0];
-    heroEl.innerHTML = renderHero(latest);
+    var latestItems = toItems(latest);
+    latestItems.forEach(registerPiece);
+    heroEl.innerHTML = latestItems.length === 0
+      ? "<p class=\"empty\">No artwork has been generated yet &mdash; check back after next week's AI news roundup.</p>"
+      : renderShowcase(latest, latestItems);
 
-    archiveEntries = entries.slice(1);
+    archiveItems = [];
+    entries.slice(1).forEach(function (entry) {
+      toItems(entry).forEach(function (item) {
+        registerPiece(item);
+        archiveItems.push(item);
+      });
+    });
     archiveShown = 0;
-    if (archiveEntries.length === 0) {
-      gridEl.innerHTML = "<p class=\"empty\">This is the first piece &mdash; the archive will grow with each new week.</p>";
+    if (archiveItems.length === 0) {
+      gridEl.innerHTML = "<p class=\"empty\">This is the first week &mdash; the archive will grow with each new week.</p>";
       return;
     }
     renderNextArchivePage();
   }
 
+  /** Flattens one manifest entry's pieces into {entry, piece} items - each piece (one model's
+   * take on the week) is its own displayable unit, in both the showcase and the archive. */
+  function toItems(entry) {
+    return (entry.pieces || []).map(function (piece) {
+      return { entry: entry, piece: piece };
+    });
+  }
+
+  function pieceKey(entry, piece) {
+    return entry.version + "|" + piece.artist;
+  }
+
+  function registerPiece(item) {
+    piecesByKey[pieceKey(item.entry, item.piece)] = item;
+  }
+
   function renderNextArchivePage() {
-    var end = Math.min(archiveShown + ARCHIVE_PAGE_SIZE, archiveEntries.length);
-    var newCards = archiveEntries.slice(archiveShown, end).map(renderCard).join("");
+    var end = Math.min(archiveShown + ARCHIVE_PAGE_SIZE, archiveItems.length);
+    var newCards = archiveItems.slice(archiveShown, end).map(renderCard).join("");
     gridEl.insertAdjacentHTML("beforeend", newCards);
     archiveShown = end;
 
-    var remaining = archiveEntries.length - archiveShown;
+    var remaining = archiveItems.length - archiveShown;
     if (remaining <= 0) {
       loadMoreEl.innerHTML = "";
       return;
@@ -81,39 +103,72 @@
     loadMoreEl.innerHTML =
       "<button type=\"button\" class=\"load-more\">Load " +
       Math.min(remaining, ARCHIVE_PAGE_SIZE) + " more &mdash; " + remaining + " earlier " +
-      (remaining === 1 ? "week" : "weeks") + "</button>";
+      (remaining === 1 ? "piece" : "pieces") + "</button>";
     loadMoreEl.querySelector(".load-more").addEventListener("click", renderNextArchivePage);
   }
 
-  function renderHero(entry) {
+  function renderShowcase(entry, items) {
+    var tiles = items.map(function (item) {
+      return renderShowcaseTile(entry, item.piece);
+    }).join("");
     return (
-      "<figure class=\"hero-figure\">" +
-      "<a href=\"" + escapeAttr(entry.imageUrl) + "\" target=\"_blank\" rel=\"noopener\">" +
-      "<img src=\"" + escapeAttr(entry.imageUrl) + "\" alt=\"Generative artwork for AI news week " + escapeAttr(entry.version) + "\" fetchpriority=\"high\" decoding=\"async\" />" +
-      "</a>" +
-      "<figcaption>" + renderDetail(entry) + "</figcaption>" +
-      "</figure>"
-    );
-  }
-
-  function renderDetail(entry) {
-    return (
+      "<div class=\"showcase-grid\">" + tiles + "</div>" +
       "<p class=\"version-line\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") + "</p>" +
-      "<p class=\"prompt\">" + escapeHtml(entry.prompt || "") + "</p>" +
-      renderRationale(entry) +
+      "<p class=\"disclosure\">Gemini, Claude, and ChatGPT each research this week's AI news and write " +
+      "their own prompt and rationale independently &mdash; every image is rendered by Gemini's " +
+      "image model, so the only variable between them is the opinion, not the medium.</p>" +
       renderHighlights(entry) +
       "<p class=\"source-line\"><a href=\"" + escapeAttr(entry.sourceUrl || "#") + "\" target=\"_blank\" rel=\"noopener\">Explore this week's AI news sources &#8599;</a></p>"
     );
   }
 
-  function renderRationale(entry) {
-    if (!entry.rationale) {
+  function renderShowcaseTile(entry, piece) {
+    return (
+      "<button type=\"button\" class=\"showcase-tile\" data-key=\"" + escapeAttr(pieceKey(entry, piece)) + "\">" +
+      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(piece.artist) +
+      "'s piece for AI news week " + escapeAttr(entry.version) + "\" fetchpriority=\"high\" decoding=\"async\" />" +
+      "<span class=\"artist-label\">" + escapeHtml(piece.artist) + "</span>" +
+      "</button>"
+    );
+  }
+
+  function renderCard(item) {
+    var entry = item.entry;
+    var piece = item.piece;
+    return (
+      "<button type=\"button\" class=\"card\" data-key=\"" + escapeAttr(pieceKey(entry, piece)) + "\">" +
+      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(piece.artist) +
+      "'s piece for AI news week " + escapeAttr(entry.version) + "\" loading=\"lazy\" />" +
+      "<span class=\"card-caption\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(piece.artist) + "</span>" +
+      "</button>"
+    );
+  }
+
+  function openPieceDialog(item) {
+    var entry = item.entry;
+    var piece = item.piece;
+    dialogBodyEl.innerHTML =
+      "<a href=\"" + escapeAttr(piece.imageUrl) + "\" target=\"_blank\" rel=\"noopener\">" +
+      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(piece.artist) +
+      "'s piece for AI news week " + escapeAttr(entry.version) + "\" />" +
+      "</a>" +
+      "<p class=\"version-line\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") +
+      " &middot; " + escapeHtml(piece.artist) + "</p>" +
+      "<p class=\"prompt\">" + escapeHtml(piece.prompt || "") + "</p>" +
+      renderRationale(piece) +
+      renderHighlights(entry) +
+      "<p class=\"source-line\"><a href=\"" + escapeAttr(entry.sourceUrl || "#") + "\" target=\"_blank\" rel=\"noopener\">Explore this week's AI news sources &#8599;</a></p>";
+    dialogEl.showModal();
+  }
+
+  function renderRationale(piece) {
+    if (!piece.rationale) {
       return "";
     }
     return (
       "<blockquote class=\"rationale\">" +
-      "<p class=\"rationale-label\">Why I made this</p>" +
-      "<p class=\"rationale-text\">" + escapeHtml(entry.rationale) + "</p>" +
+      "<p class=\"rationale-label\">Why " + escapeHtml(piece.artist) + " made this</p>" +
+      "<p class=\"rationale-text\">" + escapeHtml(piece.rationale) + "</p>" +
       "</blockquote>"
     );
   }
@@ -129,32 +184,23 @@
     return "<details class=\"highlights\"><summary>This week's headlines</summary><ul>" + items + "</ul></details>";
   }
 
-  function renderCard(entry) {
-    return (
-      "<button type=\"button\" class=\"card\" data-version=\"" + escapeAttr(entry.version) + "\">" +
-      "<img src=\"" + escapeAttr(entry.imageUrl) + "\" alt=\"Generative artwork for AI news week " + escapeAttr(entry.version) + "\" loading=\"lazy\" />" +
-      "<span class=\"card-caption\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") + "</span>" +
-      "</button>"
-    );
+  function handlePieceClick(event) {
+    var target = event.target.closest("[data-key]");
+    if (!target) {
+      return;
+    }
+    var item = piecesByKey[target.getAttribute("data-key")];
+    if (!item) {
+      return;
+    }
+    openPieceDialog(item);
   }
 
+  if (heroEl) {
+    heroEl.addEventListener("click", handlePieceClick);
+  }
   if (gridEl) {
-    gridEl.addEventListener("click", function (event) {
-      var card = event.target.closest(".card");
-      if (!card) {
-        return;
-      }
-      var entry = entriesByVersion[card.getAttribute("data-version")];
-      if (!entry || !dialogEl) {
-        return;
-      }
-      dialogBodyEl.innerHTML =
-        "<a href=\"" + escapeAttr(entry.imageUrl) + "\" target=\"_blank\" rel=\"noopener\">" +
-        "<img src=\"" + escapeAttr(entry.imageUrl) + "\" alt=\"Generative artwork for AI news week " + escapeAttr(entry.version) + "\" />" +
-        "</a>" +
-        renderDetail(entry);
-      dialogEl.showModal();
-    });
+    gridEl.addEventListener("click", handlePieceClick);
   }
 
   if (dialogEl) {
@@ -188,7 +234,7 @@
 
   function updateNextPieceCountdown() {
     var msRemaining = nextGenerationEstimate().getTime() - Date.now();
-    nextPieceEl.textContent = "Next piece expected " + formatCountdown(msRemaining) + " (estimate)";
+    nextPieceEl.textContent = "Next pieces expected " + formatCountdown(msRemaining) + " (estimate)";
   }
 
   function formatCountdown(ms) {

@@ -35,8 +35,8 @@ public final class LocalGalleryStore implements GalleryStore {
     }
 
     @Override
-    public String publishImage(String version, byte[] pngBytes) throws IOException {
-        String relativePath = "images/" + version + ".png";
+    public String publishImage(String version, String artistSlug, byte[] pngBytes) throws IOException {
+        String relativePath = "images/" + version + "-" + artistSlug + ".png";
         Files.write(outDir.resolve(relativePath), pngBytes);
         return relativePath;
     }

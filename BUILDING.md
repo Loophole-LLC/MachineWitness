@@ -59,10 +59,22 @@ GEMINI_API_KEY=your-key LOCAL_OUT=./out \
   java -jar generator/target/render-generator-1.0.0.jar
 ```
 
-This pulls the current week's real AI news, generates one real piece (image + rationale), and
-writes `./out/images/<week-id>.png` + `./out/manifest.json` (with a relative `imageUrl`, so it
-also works as a web root - see next). Running it again the same week is a safe no-op once that
-week is in the manifest.
+This pulls the current week's real AI news, generates one real piece (image + rationale) from
+Gemini, and writes `./out/images/<week-id>-gemini.png` + `./out/manifest.json` (with a relative
+`imageUrl`, so it also works as a web root - see next). Running it again the same week is a safe
+no-op once that week is in the manifest.
+
+**Add Claude and/or ChatGPT to the comparison** by also setting `ANTHROPIC_API_KEY` (from
+[console.anthropic.com](https://console.anthropic.com/settings/keys)) and/or `OPENAI_API_KEY`
+(from [platform.openai.com](https://platform.openai.com/api-keys)) - both need billing enabled
+on their respective accounts, same as Gemini. Each is entirely optional: the generator only asks
+a model to write a piece once its key is set, so it runs fine with just Gemini while the other
+two are being provisioned, or with all three for the full weekly comparison.
+
+```bash
+GEMINI_API_KEY=your-key ANTHROPIC_API_KEY=your-key OPENAI_API_KEY=your-key LOCAL_OUT=./out \
+  java -jar generator/target/render-generator-1.0.0.jar
+```
 
 **See it in the actual gallery page**, not just as a raw PNG: point the site at that same folder
 with `LOCAL_GALLERY_DIR`. The site then serves `manifest.json`/`images/*` from disk instead of
@@ -86,14 +98,19 @@ every request.
 | `GCS_BUCKET`      | both      | yes in production                   | Generator writes here; site reads from here client-side. Not needed if `LOCAL_OUT` is set. |
 | `LOCAL_OUT`       | generator | no                                   | Local dir instead of GCS - dev/test only. |
 | `LOCAL_GALLERY_DIR` | site    | no                                   | Serves manifest.json/images from this local dir instead of GCS - pair with the generator's `LOCAL_OUT` to preview the real gallery page. Dev/test only. |
-| `TEXT_MODEL`      | generator | no (default `gemini-3.6-flash`)      | Writes the art prompt + rationale from this week's headlines. |
-| `IMAGE_MODEL`     | generator | no (default `gemini-3-pro-image`)    | "Nano banana" pro tier. **Check this against Google's current model list before deploying** - image model IDs change over time and this default may lag. |
+| `GEMINI_MODEL`    | generator | no (default `gemini-3.6-flash`)      | Writes Gemini's art prompt + rationale from this week's headlines. |
+| `IMAGE_MODEL`     | generator | no (default `gemini-3-pro-image`)    | "Nano banana" pro tier - renders every piece's image, regardless of which model wrote its prompt. **Check this against Google's current model list before deploying** - image model IDs change over time and this default may lag. |
+| `ANTHROPIC_API_KEY` | generator | no                                | Anthropic Console key, billing-enabled. Claude only joins the weekly comparison once this is set. |
+| `ANTHROPIC_MODEL` | generator | no (default `claude-opus-5`)         | Writes Claude's art prompt + rationale, researched with Claude's native web search tool. |
+| `OPENAI_API_KEY`  | generator | no                                    | OpenAI Platform key, billing-enabled (the API is prepaid - adding a card alone may not add usable credit, see the account's Billing page). ChatGPT only joins once this is set. |
+| `OPENAI_MODEL`    | generator | no (default `gpt-5.1`)               | Writes ChatGPT's art prompt + rationale, researched via the Responses API's web search tool. **Unlike `GEMINI_MODEL`/`ANTHROPIC_MODEL`, this default hasn't been checked against a current reference - verify before deploying.** |
 | `PORT`            | site      | no (default `8080`)                  | Cloud Run sets this automatically. |
 
 ## Deploying to GCP
 
-This creates real, billable resources (Cloud Run, a Cloud Storage bucket, and paid Gemini API
-calls once the scheduler starts firing for real).
+This creates real, billable resources (Cloud Run, a Cloud Storage bucket, and paid Gemini, Claude,
+and ChatGPT API calls once the scheduler starts firing for real - three models' worth of calls a
+week now instead of one).
 
 ### 1. Project + APIs
 
@@ -124,10 +141,16 @@ EOF
 gsutil cors set /tmp/cors.json gs://$BUCKET
 ```
 
-### 3. Gemini API key as a secret
+### 3. API keys as secrets
+
+Gemini is required; Claude and ChatGPT are each optional - skip either secret (and its binding
+in step 4, and its `--set-secrets` entry in step 6) to run the comparison with fewer than three
+models.
 
 ```bash
 echo -n "your-gemini-api-key" | gcloud secrets create gemini-api-key --data-file=-
+echo -n "your-anthropic-api-key" | gcloud secrets create anthropic-api-key --data-file=-
+echo -n "your-openai-api-key" | gcloud secrets create openai-api-key --data-file=-
 ```
 
 ### 4. A dedicated, least-privilege service account for the generator
@@ -140,9 +163,11 @@ gsutil iam ch \
   serviceAccount:render-generator@${PROJECT_ID}.iam.gserviceaccount.com:objectAdmin \
   gs://$BUCKET
 
-gcloud secrets add-iam-policy-binding gemini-api-key \
-  --member="serviceAccount:render-generator@${PROJECT_ID}.iam.gserviceaccount.com" \
-  --role="roles/secretmanager.secretAccessor"
+for secret in gemini-api-key anthropic-api-key openai-api-key; do
+  gcloud secrets add-iam-policy-binding $secret \
+    --member="serviceAccount:render-generator@${PROJECT_ID}.iam.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor"
+done
 ```
 
 ### 5. Build and deploy the site (public service)
@@ -176,7 +201,7 @@ gcloud run jobs deploy render-generator \
   --image gcr.io/$PROJECT_ID/render-generator:<build-id> \
   --region $REGION \
   --service-account render-generator@${PROJECT_ID}.iam.gserviceaccount.com \
-  --set-secrets GEMINI_API_KEY=gemini-api-key:latest \
+  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest,OPENAI_API_KEY=openai-api-key:latest \
   --set-env-vars GCS_BUCKET=$BUCKET \
   --max-retries 1
 
@@ -206,7 +231,7 @@ gcloud scheduler jobs create http render-daily-check \
 ```
 
 Daily is cheap - it's a no-op on every day that isn't the start of a new ISO week's first run,
-and only actually calls Gemini once a week. Adjust the cron schedule to taste.
+and only actually calls the models once a week. Adjust the cron schedule to taste.
 
 ### 8. Custom domain (optional)
 

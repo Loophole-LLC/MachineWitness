@@ -16,11 +16,28 @@
     </properties>
 
     <dependencies>
-        <!-- JSON for Gemini REST calls and the gallery manifest -->
+        <!-- JSON for the Gemini REST calls and the gallery manifest -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.14.0</version>
+        </dependency>
+        <!-- Official SDKs for the Claude and ChatGPT art-direction writers -->
+        <dependency>
+            <groupId>com.anthropic</groupId>
+            <artifactId>anthropic-java</artifactId>
+            <version>2.34.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.openai</groupId>
+            <artifactId>openai-java</artifactId>
+            <version>2.13.0</version>
+        </dependency>
+        <!-- RSS/Atom parsing for the weekly feed digest -->
+        <dependency>
+            <groupId>com.rometools</groupId>
+            <artifactId>rome</artifactId>
+            <version>2.1.0</version>
         </dependency>
     </dependencies>
 
