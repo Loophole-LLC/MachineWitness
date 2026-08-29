@@ -72,8 +72,10 @@ public final class Main {
             return;
         }
 
-        String weekLabel = today.minusDays(6).format(DateTimeFormatter.ISO_LOCAL_DATE)
-                + " to " + today.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate weekStart = today.with(weekFields.dayOfWeek(), 1);
+        LocalDate weekEnd = weekStart.plusDays(6);
+        String weekLabel = weekStart.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                + " to " + weekEnd.format(DateTimeFormatter.ISO_LOCAL_DATE);
         WeeklyDigest digest = new WeeklyDigest(weekId, weekLabel, feedDigests, total);
         System.out.println("Found " + total + " headlines across " + feedDigests.size() + " sources for " + weekId);
 
