@@ -165,6 +165,7 @@
       "</figure>" +
       "<p class=\"version-line\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") +
       " &middot; " + escapeHtml(piece.artist) + "</p>" +
+      "<p class=\"prompt-label\">" + escapeHtml(piece.artist) + "'s prompt</p>" +
       "<p class=\"prompt\">" + escapeHtml(piece.prompt || "") + "</p>" +
       renderRationale(piece) +
       renderHighlights(entry) +

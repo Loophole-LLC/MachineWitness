@@ -194,8 +194,17 @@ a {
   margin: 0 0 0.5rem;
 }
 
+.prompt-label {
+  margin: 0 0 0.3rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .prompt {
-  font-size: 1.05rem;
+  font-size: 1rem;
   margin: 0 0 0.75rem;
 }
 
