@@ -1,7 +1,19 @@
-# Machine Witness
+<p align="center">
+  <img src="site/src/main/resources/public/assets/icon-1024.png" alt="Machine Witness logo" width="120" />
+</p>
 
-**Live at [machinewitness.art](https://machinewitness.art) &middot; on Instagram at
-[@machinewitness.art](https://www.instagram.com/machinewitness.art).**
+<h1 align="center">Machine Witness</h1>
+
+<p align="center">
+  <em>Three AIs, one mirror: the same week in AI news, three independent reactions, each turned into art.</em>
+</p>
+
+<p align="center">
+  <strong>Live at <a href="https://machinewitness.art">machinewitness.art</a> &middot; on Instagram at
+  <a href="https://www.instagram.com/machinewitness.art">@machinewitness.art</a></strong>
+</p>
+
+---
 
 An experiment in giving three AIs a mirror. Every week, this project pulls every feed in the
 [Alan Turing Institute's curated OPML list of AI industry RSS
