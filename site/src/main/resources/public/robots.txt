@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://renderweekly.art/sitemap.xml
+Sitemap: https://machinewitness.art/sitemap.xml

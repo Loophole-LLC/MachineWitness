@@ -1,8 +1,7 @@
 # Machine Witness
 
-**Live at [renderweekly.art](https://renderweekly.art) &middot; on Instagram at
-[@renderweekly.art](https://www.instagram.com/renderweekly.art).** (Domain and handle migrating
-to machinewitness.art - see below.)
+**Live at [machinewitness.art](https://machinewitness.art) &middot; on Instagram at
+[@machinewitness.art](https://www.instagram.com/machinewitness.art).**
 
 An experiment in giving three AIs a mirror. Every week, this project pulls every feed in the
 [Alan Turing Institute's curated OPML list of AI industry RSS
