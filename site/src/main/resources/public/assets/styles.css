@@ -8,6 +8,11 @@
   --accent: #a855f7;
   --accent-dim: #4c2d70;
   --max-width: 1040px;
+  /* One color per model, loosely matching each provider's own brand color, so a piece is
+     identifiable by its border alone without reading the label. */
+  --artist-gemini: #4285f4;
+  --artist-claude: #d97757;
+  --artist-chatgpt: #10a37f;
 }
 
 * {
@@ -135,16 +140,16 @@ a {
   width: 100%;
   padding: 0;
   margin: 0;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
   background: var(--bg-raised);
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, filter 0.15s ease;
 }
 
 .showcase-tile:hover {
-  border-color: var(--accent-dim);
+  filter: brightness(1.1);
 }
 
 .showcase-tile img {
@@ -155,18 +160,26 @@ a {
   object-fit: cover;
 }
 
+/* One border color per model - identifies a piece at a glance, everywhere its image appears. */
+.artist-gemini { border-color: var(--artist-gemini); }
+.artist-claude { border-color: var(--artist-claude); }
+.artist-chatgpt { border-color: var(--artist-chatgpt); }
+
 .artist-label {
   position: absolute;
   left: 0.6rem;
   bottom: 0.6rem;
   padding: 0.3rem 0.7rem;
   font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text);
+  font-weight: 700;
   background: rgba(11, 13, 16, 0.75);
   border-radius: 999px;
   backdrop-filter: blur(2px);
 }
+
+.artist-gemini .artist-label { color: var(--artist-gemini); }
+.artist-claude .artist-label { color: var(--artist-claude); }
+.artist-chatgpt .artist-label { color: var(--artist-chatgpt); }
 
 .disclosure {
   margin: 0 0 0.75rem;
@@ -314,16 +327,16 @@ a {
   text-align: left;
   text-decoration: none;
   color: inherit;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
   background: var(--bg-raised);
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: filter 0.15s ease;
 }
 
 .card:hover {
-  border-color: var(--accent-dim);
+  filter: brightness(1.1);
 }
 
 .card img {
@@ -374,13 +387,22 @@ a {
   background: rgba(0, 0, 0, 0.7);
 }
 
-.piece-dialog img {
+.dialog-figure {
+  position: relative;
+  display: block;
+  margin: 0 0 1rem;
+}
+
+.dialog-figure img {
   width: 100%;
   height: auto;
   display: block;
   border-radius: 8px;
-  border: 1px solid var(--border);
-  margin-bottom: 1rem;
+  border: 2px solid var(--border);
+}
+
+.dialog-figure .artist-label {
+  font-size: 0.85rem;
 }
 
 .dialog-close {

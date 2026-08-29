@@ -116,15 +116,22 @@
       "<p class=\"version-line\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") + "</p>" +
       "<p class=\"disclosure\">Gemini, Claude, and ChatGPT each research this week's AI news and write " +
       "their own prompt and rationale independently &mdash; every image is rendered by Gemini's " +
-      "image model, so the only variable between them is the opinion, not the medium.</p>" +
+      "image model (nano banana), so the only variable between them is the opinion, not the medium.</p>" +
       renderHighlights(entry) +
       "<p class=\"source-line\"><a href=\"" + escapeAttr(entry.sourceUrl || "#") + "\" target=\"_blank\" rel=\"noopener\">Explore this week's AI news sources &#8599;</a></p>"
     );
   }
 
+  /** One CSS class per model (see the --artist-* colors in styles.css) so its border and label
+   * are colored consistently everywhere its image appears. */
+  function artistClass(artist) {
+    return "artist-" + String(artist || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
   function renderShowcaseTile(entry, piece) {
     return (
-      "<button type=\"button\" class=\"showcase-tile\" data-key=\"" + escapeAttr(pieceKey(entry, piece)) + "\">" +
+      "<button type=\"button\" class=\"showcase-tile " + artistClass(piece.artist) + "\" data-key=\"" +
+      escapeAttr(pieceKey(entry, piece)) + "\">" +
       "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(piece.artist) +
       "'s piece for AI news week " + escapeAttr(entry.version) + "\" fetchpriority=\"high\" decoding=\"async\" />" +
       "<span class=\"artist-label\">" + escapeHtml(piece.artist) + "</span>" +
@@ -136,7 +143,8 @@
     var entry = item.entry;
     var piece = item.piece;
     return (
-      "<button type=\"button\" class=\"card\" data-key=\"" + escapeAttr(pieceKey(entry, piece)) + "\">" +
+      "<button type=\"button\" class=\"card " + artistClass(piece.artist) + "\" data-key=\"" +
+      escapeAttr(pieceKey(entry, piece)) + "\">" +
       "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(piece.artist) +
       "'s piece for AI news week " + escapeAttr(entry.version) + "\" loading=\"lazy\" />" +
       "<span class=\"card-caption\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(piece.artist) + "</span>" +
@@ -148,10 +156,13 @@
     var entry = item.entry;
     var piece = item.piece;
     dialogBodyEl.innerHTML =
+      "<figure class=\"dialog-figure " + artistClass(piece.artist) + "\">" +
       "<a href=\"" + escapeAttr(piece.imageUrl) + "\" target=\"_blank\" rel=\"noopener\">" +
       "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(piece.artist) +
       "'s piece for AI news week " + escapeAttr(entry.version) + "\" />" +
       "</a>" +
+      "<span class=\"artist-label\">" + escapeHtml(piece.artist) + "</span>" +
+      "</figure>" +
       "<p class=\"version-line\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") +
       " &middot; " + escapeHtml(piece.artist) + "</p>" +
       "<p class=\"prompt\">" + escapeHtml(piece.prompt || "") + "</p>" +

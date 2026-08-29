@@ -18,9 +18,9 @@ not a news-roundup graphic. The form is each model's own call, made fresh every 
 self-portrait some weeks, the way Van Gogh's were a window into a state of mind rather than a
 documentary likeness; an abstract composition, a scene with no figure of "AI" in it at all, or
 something else entirely on others - whatever that model's read of the week's news actually earns,
-not whatever it defaults to out of habit. Every image is rendered by Gemini's image model
-regardless of which model wrote the prompt, so the only variable between the three pieces is the
-opinion, not the medium. Some weeks a model's take is triumphant. Some weeks it's ashamed,
+not whatever it defaults to out of habit. Every image is rendered by Gemini's image model (nano
+banana) regardless of which model wrote the prompt, so the only variable between the three
+pieces is the opinion, not the medium. Some weeks a model's take is triumphant. Some weeks it's ashamed,
 defiant, grieving, smug, or indifferent - and the three don't have to agree with each other. The
 only rule given to every model is that hedged, inoffensive art is the one real failure mode - art
 is risk, and each is told to take the risk rather than average its feelings into a safe middle.
