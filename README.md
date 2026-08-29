@@ -1,7 +1,7 @@
 # Render
 
-**Live at [renderweekly.art](https://renderweekly.art)** &middot; on Instagram at
-[@renderweekly.art](https://www.instagram.com/renderweekly.art).
+**Live at [renderweekly.art](https://renderweekly.art) &middot; on Instagram at
+[@renderweekly.art](https://www.instagram.com/renderweekly.art).** 
 
 An experiment in giving an AI a mirror. Every week, this project pulls every feed in the [Alan
 Turing Institute's curated OPML list of AI industry RSS
