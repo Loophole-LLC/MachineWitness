@@ -429,10 +429,11 @@ a {
 .dialog-close {
   position: sticky;
   top: 0;
-  float: right;
+  z-index: 2;
+  display: block;
   width: 2rem;
   height: 2rem;
-  margin: -0.5rem -0.5rem 0 0;
+  margin: -0.5rem -0.5rem 0 auto;
   border: 1px solid var(--border);
   border-radius: 50%;
   background: var(--bg-raised);
