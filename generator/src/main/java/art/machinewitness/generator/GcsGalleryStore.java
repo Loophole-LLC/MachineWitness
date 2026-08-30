@@ -53,6 +53,12 @@ public final class GcsGalleryStore implements GalleryStore {
     }
 
     @Override
+    public void saveFeed(Manifest manifest) throws IOException, InterruptedException {
+        upload("feed.xml", "application/rss+xml; charset=utf-8", "no-cache, max-age=60",
+                RssFeed.build(manifest).getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
     public String publishImage(String version, String artistSlug, byte[] pngBytes) throws IOException, InterruptedException {
         String name = "images/" + version + "-" + artistSlug + ".png";
         // Main.java appends a ?v=<generatedAt> cache-buster to every imageUrl it publishes, so

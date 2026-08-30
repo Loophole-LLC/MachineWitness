@@ -147,6 +147,7 @@ public final class Main {
         );
         manifest.prepend(entry);
         store.saveManifest(manifest);
+        store.saveFeed(manifest);
 
         System.out.println("Published " + pieces.size() + " piece(s) for " + weekId + ".");
     }

@@ -35,6 +35,11 @@ public final class LocalGalleryStore implements GalleryStore {
     }
 
     @Override
+    public void saveFeed(Manifest manifest) throws IOException {
+        Files.writeString(outDir.resolve("feed.xml"), RssFeed.build(manifest), StandardCharsets.UTF_8);
+    }
+
+    @Override
     public String publishImage(String version, String artistSlug, byte[] pngBytes) throws IOException {
         String relativePath = "images/" + version + "-" + artistSlug + ".png";
         Files.write(outDir.resolve(relativePath), pngBytes);
