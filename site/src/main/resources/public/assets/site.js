@@ -57,6 +57,9 @@
     heroEl.innerHTML = latestItems.length === 0
       ? "<p class=\"empty\">No artwork has been generated yet &mdash; check back after next week's AI news roundup.</p>"
       : renderShowcase(latest, latestItems);
+    if (latestItems.length > 0) {
+      injectStructuredData(latest, latestItems);
+    }
 
     archiveItems = [];
     entries.slice(1).forEach(function (entry) {
@@ -128,12 +131,54 @@
     return "artist-" + String(artist || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   }
 
+  function pieceAltText(entry, piece) {
+    return piece.artist + "'s AI-generated art reacting to AI industry news, week " +
+      entry.version + " (" + (entry.date || "") + ")";
+  }
+
+  /** Emits schema.org VisualArtwork JSON-LD for the current week's pieces, so crawlers that
+   * render JS (Google among them) can index each piece as a distinct, described artwork instead
+   * of just an <img> tag. Only covers the latest week - see feed.xml for the full archive, which
+   * every crawler can read regardless of whether it executes JS. */
+  function injectStructuredData(entry, items) {
+    var artworks = items.map(function (item, i) {
+      return {
+        "@type": "VisualArtwork",
+        "position": i + 1,
+        "name": item.piece.artist + "'s take on AI news, week " + entry.version,
+        "image": item.piece.imageUrl,
+        "creator": { "@type": "Organization", "name": item.piece.artist },
+        "dateCreated": entry.generatedAt || undefined,
+        "description": item.piece.rationale,
+        "artMedium": "AI-generated digital art",
+        "about": "AI industry news, week " + entry.version + (entry.date ? " (" + entry.date + ")" : "")
+      };
+    });
+    var data = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Machine Witness — week " + entry.version,
+      "itemListElement": artworks
+    };
+    var existing = document.getElementById("structured-data");
+    if (existing) {
+      existing.remove();
+    }
+    var script = document.createElement("script");
+    script.id = "structured-data";
+    script.type = "application/ld+json";
+    // Neutralize "<" so a "</script>"-shaped substring in AI-generated text (e.g. a rationale
+    // quoting a headline) can't prematurely close this tag.
+    script.textContent = JSON.stringify(data).replace(/</g, "\\u003c");
+    document.head.appendChild(script);
+  }
+
   function renderShowcaseTile(entry, piece) {
     return (
       "<button type=\"button\" class=\"showcase-tile " + artistClass(piece.artist) + "\" data-key=\"" +
       escapeAttr(pieceKey(entry, piece)) + "\">" +
-      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(piece.artist) +
-      "'s piece for AI news week " + escapeAttr(entry.version) + "\" fetchpriority=\"high\" decoding=\"async\" />" +
+      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
+      "\" fetchpriority=\"high\" decoding=\"async\" />" +
       "<span class=\"artist-label\">" + escapeHtml(piece.artist) + "</span>" +
       "</button>"
     );
@@ -145,8 +190,8 @@
     return (
       "<button type=\"button\" class=\"card " + artistClass(piece.artist) + "\" data-key=\"" +
       escapeAttr(pieceKey(entry, piece)) + "\">" +
-      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(piece.artist) +
-      "'s piece for AI news week " + escapeAttr(entry.version) + "\" loading=\"lazy\" />" +
+      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
+      "\" loading=\"lazy\" />" +
       "<span class=\"card-caption\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(piece.artist) + "</span>" +
       "</button>"
     );
@@ -158,8 +203,8 @@
     dialogBodyEl.innerHTML =
       "<figure class=\"dialog-figure " + artistClass(piece.artist) + "\">" +
       "<a href=\"" + escapeAttr(piece.imageUrl) + "\" target=\"_blank\" rel=\"noopener\">" +
-      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(piece.artist) +
-      "'s piece for AI news week " + escapeAttr(entry.version) + "\" />" +
+      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
+      "\" />" +
       "</a>" +
       "<span class=\"artist-label\">" + escapeHtml(piece.artist) + "</span>" +
       "</figure>" +

@@ -148,9 +148,13 @@ public final class StaticSiteServer {
         }
         String bucket = localGalleryDir() != null ? "__local__" : System.getenv().getOrDefault("GCS_BUCKET", "");
         String assetVersion = System.getenv().getOrDefault("K_REVISION", String.valueOf(System.currentTimeMillis()));
+        // The generator publishes feed.xml straight to the bucket alongside manifest.json/images -
+        // same pattern as those, no server-side proxying needed.
+        String feedUrl = "https://storage.googleapis.com/" + bucket + "/feed.xml";
         String rendered = new String(raw, StandardCharsets.UTF_8)
                 .replace("{{GCS_BUCKET}}", bucket)
-                .replace("{{ASSET_VERSION}}", assetVersion);
+                .replace("{{ASSET_VERSION}}", assetVersion)
+                .replace("{{FEED_URL}}", feedUrl);
         return rendered.getBytes(StandardCharsets.UTF_8);
     }
 
