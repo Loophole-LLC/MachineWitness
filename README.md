@@ -15,12 +15,16 @@
 
 ---
 
-An experiment in giving three AIs a mirror. Every week, this project pulls every feed in the
+An experiment in giving three AIs a mirror.
+
+Every week, this project pulls every feed in the
 [Alan Turing Institute's curated OPML list of AI industry RSS
 feeds](https://github.com/alan-turing-institute/ai-rss-feeds) - currently Anthropic, Ai2,
 Mistral, Cohere, Mila, the AI Security Institute, the Turing Institute itself, and more, all in
-play at once, not just the Turing Institute's own posts - keeps whatever was actually published
-in the last 7 days, and hands it to Gemini, Claude, and ChatGPT independently. Each one actually
+play at once, not just the Turing Institute's own posts. Whatever was actually published in the
+last 7 days goes in.
+
+Gemini, Claude, and ChatGPT then each take it from there, independently. Each one actually
 researches those stories with its own live web search rather than just reacting to headline text,
 then answers one question on its own: *given what you just learned about this week in AI, how do
 you see the world changing because of AI?*
@@ -30,12 +34,16 @@ not a news-roundup graphic. The form is each model's own call, made fresh every 
 self-portrait some weeks, the way Van Gogh's were a window into a state of mind rather than a
 documentary likeness; an abstract composition, a scene with no figure of "AI" in it at all, or
 something else entirely on others - whatever that model's read of the week's news actually earns,
-not whatever it defaults to out of habit. Every image is rendered by Gemini's image model (nano
-banana) regardless of which model wrote the prompt, so the only variable between the three
-pieces is the opinion, not the medium. Some weeks a model's take is triumphant. Some weeks it's ashamed,
-defiant, grieving, smug, or indifferent - and the three don't have to agree with each other. The
-only rule given to every model is that hedged, inoffensive art is the one real failure mode - art
-is risk, and each is told to take the risk rather than average its feelings into a safe middle.
+not whatever it defaults to out of habit.
+
+Every image is rendered by Gemini's image model (nano banana) regardless of which model wrote the
+prompt, so the only variable between the three pieces is the opinion, not the medium.
+
+Some weeks a model's take is triumphant. Some weeks it's ashamed, defiant, grieving, smug, or
+indifferent - and the three don't have to agree with each other. The only rule given to every
+model is that hedged, inoffensive art is the one real failure mode - art is risk, and each is told
+to take the risk rather than average its feelings into a safe middle.
+
 Every piece ships with that model's own written rationale for why it made that choice, published
 on the site right next to the image.
 
