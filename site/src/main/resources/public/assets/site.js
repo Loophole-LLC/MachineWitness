@@ -12,6 +12,7 @@
   var piecesByKey = {};
   var archiveItems = [];
   var archiveShown = 0;
+  var latestVersion = null;
 
   var nextPieceEl = document.getElementById("next-piece");
   if (nextPieceEl) {
@@ -60,6 +61,8 @@
     if (latestItems.length > 0) {
       injectStructuredData(latest, latestItems);
     }
+    latestVersion = latest.version;
+    updateNextPieceCountdown();
 
     archiveItems = [];
     entries.slice(1).forEach(function (entry) {
@@ -274,6 +277,19 @@
     }
   }
 
+  /** Same ISO-8601 week id the generator computes server-side (WeekFields.ISO) - Thursday-anchored
+   * so it agrees with Java's week-based year at year boundaries too, not just week number. */
+  function isoWeekId(date) {
+    var d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    var dayNum = (d.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+    d.setUTCDate(d.getUTCDate() - dayNum + 3); // nearest Thursday
+    var firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+    var firstThursdayDayNum = (firstThursday.getUTCDay() + 6) % 7;
+    firstThursday.setUTCDate(firstThursday.getUTCDate() - firstThursdayDayNum + 3);
+    var weekNum = 1 + Math.round((d - firstThursday) / (7 * 24 * 3600 * 1000));
+    return d.getUTCFullYear() + "-W" + (weekNum < 10 ? "0" : "") + weekNum;
+  }
+
   // The generator only ever produces a new piece once per ISO week, on whichever day the daily
   // 13:00 UTC scheduler first runs after Monday 00:00 UTC. This estimates that moment plus a
   // couple hours of slack for job runtime and scheduling jitter - deliberately erring late so
@@ -282,6 +298,13 @@
     var now = new Date();
     var target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 15, 0, 0));
     var daysUntilMonday = (1 - target.getUTCDay() + 7) % 7;
+    // If today is Monday and this week's pieces are already published (generation runs well
+    // before the 15:00 UTC slack cutoff above), the next real generation is next Monday, not
+    // "later today" - without this check the countdown claims pieces are imminent for hours
+    // after they've already shipped.
+    if (daysUntilMonday === 0 && latestVersion && latestVersion === isoWeekId(now)) {
+      daysUntilMonday = 7;
+    }
     target.setUTCDate(target.getUTCDate() + daysUntilMonday);
     if (target.getTime() <= now.getTime()) {
       target.setUTCDate(target.getUTCDate() + 7);
