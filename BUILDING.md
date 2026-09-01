@@ -97,12 +97,12 @@ every request.
 | `GCS_BUCKET`      | both      | yes in production                   | Generator writes here; site reads from here client-side. Not needed if `LOCAL_OUT` is set. |
 | `LOCAL_OUT`       | generator | no                                   | Local dir instead of GCS - dev/test only. |
 | `LOCAL_GALLERY_DIR` | site    | no                                   | Serves manifest.json/images from this local dir instead of GCS - pair with the generator's `LOCAL_OUT` to preview the real gallery page. Dev/test only. |
-| `GEMINI_MODEL`    | generator | no (default `gemini-3.6-flash`)      | Writes Gemini's art prompt + rationale from this week's headlines. |
+| `GEMINI_MODEL`    | generator | no (default `gemini-3.7-flash`)      | Writes Gemini's art prompt + rationale from this week's headlines. |
 | `IMAGE_MODEL`     | generator | no (default `gemini-3-pro-image`)    | "Nano banana" pro tier - renders every piece's image, regardless of which model wrote its prompt. **Check this against Google's current model list before deploying** - image model IDs change over time and this default may lag. |
 | `ANTHROPIC_API_KEY` | generator | no                                | Anthropic Console key, billing-enabled. Claude only joins the weekly comparison once this is set. |
 | `ANTHROPIC_MODEL` | generator | no (default `claude-opus-5`)         | Writes Claude's art prompt + rationale, researched with Claude's native web search tool. |
 | `OPENAI_API_KEY`  | generator | no                                    | OpenAI Platform key, billing-enabled (the API is prepaid - adding a card alone may not add usable credit, see the account's Billing page). ChatGPT only joins once this is set. |
-| `OPENAI_MODEL`    | generator | no (default `gpt-5.1`)               | Writes ChatGPT's art prompt + rationale, researched via the Responses API's web search tool. **Unlike `GEMINI_MODEL`/`ANTHROPIC_MODEL`, this default hasn't been checked against a current reference - verify before deploying.** |
+| `OPENAI_MODEL`    | generator | no (default `gpt-5.6-sol`)           | Writes ChatGPT's art prompt + rationale, researched via the Responses API's web search tool. Sol is GPT-5.6's flagship tier - checked 2026-09-01. |
 | `PORT`            | site      | no (default `8080`)                  | Cloud Run sets this automatically. |
 
 ## Deploying to GCP

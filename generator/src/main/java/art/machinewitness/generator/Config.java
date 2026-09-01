@@ -23,12 +23,10 @@ public record Config(
         String localOutDir
 ) {
 
-    private static final String DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
+    private static final String DEFAULT_GEMINI_MODEL = "gemini-3.7-flash";
     private static final String DEFAULT_IMAGE_MODEL = "gemini-3-pro-image";
     private static final String DEFAULT_ANTHROPIC_MODEL = "claude-opus-5";
-    // Check this against OpenAI's current model list before deploying - unlike GEMINI_MODEL and
-    // ANTHROPIC_MODEL, this default hasn't been verified against a current reference.
-    private static final String DEFAULT_OPENAI_MODEL = "gpt-5.1";
+    private static final String DEFAULT_OPENAI_MODEL = "gpt-5.6";
 
     public static Config fromEnv(String[] args) {
         Map<String, String> env = System.getenv();
