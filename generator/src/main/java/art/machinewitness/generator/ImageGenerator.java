@@ -3,6 +3,10 @@ package art.machinewitness.generator;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 
@@ -37,7 +41,7 @@ public final class ImageGenerator {
         body.add("generationConfig", generationConfig);
 
         JsonObject response = api.generateContent(model, body);
-        return extractImageBytes(response);
+        return toPng(extractImageBytes(response));
     }
 
     private static byte[] extractImageBytes(JsonObject response) throws IOException {
@@ -57,5 +61,19 @@ public final class ImageGenerator {
         } catch (RuntimeException e) {
             throw new IOException("Unexpected Gemini image response shape: " + response, e);
         }
+    }
+
+    // The API's declared mimeType (currently image/jpeg, despite what the model name suggests) is
+    // not the format the rest of the pipeline is contracted to - GcsGalleryStore/LocalGalleryStore
+    // name every object *.png and upload it as image/png. Re-encode here so those bytes are always
+    // genuinely PNG, regardless of what Gemini actually returns.
+    private static byte[] toPng(byte[] imageBytes) throws IOException {
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageBytes));
+        if (image == null) {
+            throw new IOException("Gemini image response bytes could not be decoded as an image");
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", out);
+        return out.toByteArray();
     }
 }
