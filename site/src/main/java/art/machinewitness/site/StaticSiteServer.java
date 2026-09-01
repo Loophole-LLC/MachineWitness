@@ -89,6 +89,9 @@ public final class StaticSiteServer {
             body = renderIndex();
         } else if (isGalleryDataPath(path) && localGalleryDir() != null) {
             body = readLocalGalleryFile(path);
+        } else if ("/feed.xml".equals(path) && localGalleryDir() == null) {
+            redirectToFeed(exchange);
+            return;
         } else {
             body = readResource(path);
         }
@@ -148,13 +151,9 @@ public final class StaticSiteServer {
         }
         String bucket = localGalleryDir() != null ? "__local__" : System.getenv().getOrDefault("GCS_BUCKET", "");
         String assetVersion = System.getenv().getOrDefault("K_REVISION", String.valueOf(System.currentTimeMillis()));
-        // The generator publishes feed.xml straight to the bucket alongside manifest.json/images -
-        // same pattern as those, no server-side proxying needed.
-        String feedUrl = "https://storage.googleapis.com/" + bucket + "/feed.xml";
         String rendered = new String(raw, StandardCharsets.UTF_8)
                 .replace("{{GCS_BUCKET}}", bucket)
-                .replace("{{ASSET_VERSION}}", assetVersion)
-                .replace("{{FEED_URL}}", feedUrl);
+                .replace("{{ASSET_VERSION}}", assetVersion);
         return rendered.getBytes(StandardCharsets.UTF_8);
     }
 
@@ -164,7 +163,7 @@ public final class StaticSiteServer {
      * is enough to see a real gallery page without any GCS bucket.
      */
     private static boolean isGalleryDataPath(String path) {
-        return "/manifest.json".equals(path) || path.startsWith("/images/");
+        return "/manifest.json".equals(path) || "/feed.xml".equals(path) || path.startsWith("/images/");
     }
 
     private static String localGalleryDir() {
@@ -183,6 +182,19 @@ public final class StaticSiteServer {
         headers.set("Location", "/");
         headers.set("Cache-Control", "no-store");
         exchange.sendResponseHeaders(301, -1);
+        exchange.close();
+    }
+
+    // The generator publishes feed.xml straight to the bucket alongside manifest.json/images, so
+    // this server doesn't proxy the bytes - it just points readers (and the <link rel="alternate">
+    // in index.html) at a stable machinewitness.art/feed.xml URL via a redirect to the real object.
+    private static void redirectToFeed(HttpExchange exchange) throws IOException {
+        String bucket = System.getenv().getOrDefault("GCS_BUCKET", "");
+        Headers headers = exchange.getResponseHeaders();
+        applySecurityHeaders(headers);
+        headers.set("Location", "https://storage.googleapis.com/" + bucket + "/feed.xml");
+        headers.set("Cache-Control", "no-cache, max-age=60");
+        exchange.sendResponseHeaders(302, -1);
         exchange.close();
     }
 
