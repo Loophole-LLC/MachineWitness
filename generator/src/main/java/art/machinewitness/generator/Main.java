@@ -92,6 +92,17 @@ public final class Main {
             System.out.println("Skipping ChatGPT - no OPENAI_API_KEY set.");
         }
 
+        // Looked up by exact headline title so a citation can only ever point at a real item from
+        // this week's actual feeds, never a model-hallucinated one - see resolveCitations().
+        Map<String, NewsItem> itemsByHeadline = new LinkedHashMap<>();
+        Map<String, String> sourceByHeadline = new LinkedHashMap<>();
+        for (FeedDigest feed : feedDigests) {
+            for (NewsItem item : feed.items()) {
+                itemsByHeadline.putIfAbsent(item.title(), item);
+                sourceByHeadline.putIfAbsent(item.title(), feed.sourceName());
+            }
+        }
+
         ImageGenerator imageGenerator = new ImageGenerator(config.geminiApiKey(), config.imageModel());
         Instant generatedAt = Instant.now();
         List<Piece> pieces = new ArrayList<>();
@@ -120,7 +131,10 @@ public final class Main {
                 // without this a corrected/regenerated piece would keep showing viewers the stale
                 // cached PNG for up to an hour even after manifest.json had already moved on.
                 String imageUrl = store.publishImage(weekId, slug, png) + "?v=" + generatedAt.toEpochMilli();
-                pieces.add(new Piece(direction.writtenBy(), direction.prompt(), direction.rationale(), imageUrl));
+                List<Citation> citations = resolveCitations(
+                        direction.citations(), direction.rationale(), itemsByHeadline, sourceByHeadline);
+                pieces.add(new Piece(direction.writtenBy(), direction.model(), direction.prompt(),
+                        direction.rationale(), citations, imageUrl));
             } catch (Exception e) {
                 // One provider's outage, billing issue, or bad response shouldn't cost the other
                 // two their completed work - skip it and publish whichever pieces did succeed.
@@ -150,5 +164,32 @@ public final class Main {
         store.saveFeed(manifest);
 
         System.out.println("Published " + pieces.size() + " piece(s) for " + weekId + ".");
+    }
+
+    private static final int MAX_CITATIONS_PER_PIECE = 3;
+
+    /**
+     * Keeps only citations that check out against ground truth: the quote must actually appear
+     * verbatim in the rationale that was just published (so the site can locate and highlight it),
+     * and the headline must match a real item from this week's feeds (so the link is real, not a
+     * model-hallucinated URL). Everything else is silently dropped rather than published broken.
+     */
+    private static List<Citation> resolveCitations(List<Citation> raw, String rationale,
+            Map<String, NewsItem> itemsByHeadline, Map<String, String> sourceByHeadline) {
+        List<Citation> resolved = new ArrayList<>();
+        for (Citation c : raw) {
+            if (resolved.size() >= MAX_CITATIONS_PER_PIECE) {
+                break;
+            }
+            if (c.quote() == null || c.headline() == null || c.quote().isBlank() || !rationale.contains(c.quote())) {
+                continue;
+            }
+            NewsItem item = itemsByHeadline.get(c.headline());
+            if (item == null) {
+                continue;
+            }
+            resolved.add(new Citation(c.quote(), c.headline(), item.link(), sourceByHeadline.get(c.headline())));
+        }
+        return resolved;
     }
 }

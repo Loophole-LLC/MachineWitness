@@ -67,7 +67,7 @@ public final class ArtInstruction {
             This week's real headlines (%s):
             %s
 
-            Respond with a JSON object with exactly two fields:
+            Respond with a JSON object with exactly three fields:
             - "prompt": the finished image-generation prompt itself, one dense paragraph, ready \
             to hand directly to an image model. No preamble, no markdown, no quotation marks.
             - "rationale": two to four sentences, written in your own first-person voice, on why \
@@ -75,6 +75,15 @@ public final class ArtInstruction {
             reaction, and why this form, medium, or symbol was the honest way to carry it. This \
             gets published on the site next to the piece, so make it a real account of your \
             reasoning, not a caption.
+            - "citations": an array of 1 to 3 objects, each pointing your rationale back at the \
+            specific headline that provoked it, with fields "quote" and "headline". "quote" must \
+            be 3 to 8 words copied character-for-character out of the "rationale" text you just \
+            wrote above - not paraphrased, not summarized, an exact substring. "headline" must be \
+            copied character-for-character from one of the headlines listed above under "This \
+            week's real headlines". If you can't produce an exact substring match for either \
+            side, leave that citation out rather than approximate it - a wrong or fuzzy citation \
+            is worse than a missing one, since it gets published as a clickable link readers \
+            expect to work.
             """;
 
     private ArtInstruction() {

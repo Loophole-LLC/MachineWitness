@@ -7,6 +7,8 @@ import com.anthropic.models.messages.StructuredMessageCreateParams;
 import com.anthropic.models.messages.ThinkingConfigAdaptive;
 import com.anthropic.models.messages.WebSearchTool20260209;
 
+import java.util.List;
+
 /**
  * Asks Claude to turn this week's real AI-industry headlines into one piece of art. Uses
  * Claude's native web search tool so the model researches the actual story behind each headline
@@ -15,7 +17,10 @@ import com.anthropic.models.messages.WebSearchTool20260209;
 public final class ClaudeArtDirectionWriter implements ArtDirectionWriter {
 
     /** Structured-output target for Claude's response - schema is derived automatically. */
-    private record ClaudeOutput(String prompt, String rationale) {
+    private record ClaudeOutput(String prompt, String rationale, List<ClaudeCitation> citations) {
+    }
+
+    private record ClaudeCitation(String quote, String headline) {
     }
 
     private final AnthropicClient client;
@@ -49,6 +54,11 @@ public final class ClaudeArtDirectionWriter implements ArtDirectionWriter {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Claude response had no text block"));
 
-        return new ArtDirection(output.prompt().strip(), output.rationale().strip(), "Claude");
+        List<Citation> citations = (output.citations() == null ? List.<ClaudeCitation>of() : output.citations())
+                .stream()
+                .map(c -> new Citation(c.quote(), c.headline(), null, null))
+                .toList();
+        return new ArtDirection(output.prompt().strip(), output.rationale().strip(), "Claude",
+                ModelLabel.humanize(model), citations);
     }
 }

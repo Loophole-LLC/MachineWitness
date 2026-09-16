@@ -10,6 +10,8 @@ import com.openai.models.responses.ResponseOutputItem;
 import com.openai.models.responses.WebSearchTool;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Asks ChatGPT to turn this week's real AI-industry headlines into one piece of art. Uses
@@ -50,15 +52,25 @@ public final class OpenAiArtDirectionWriter implements ArtDirectionWriter {
                 .findFirst()
                 .orElseThrow(() -> new IOException("ChatGPT response had no output text"));
 
-        return parseDirection(text);
+        return parseDirection(text, model);
     }
 
-    private static ArtDirection parseDirection(String text) throws IOException {
+    private static ArtDirection parseDirection(String text, String model) throws IOException {
         try {
             JsonObject obj = JsonParser.parseString(extractJsonObject(text)).getAsJsonObject();
             String prompt = obj.get("prompt").getAsString().strip();
             String rationale = obj.get("rationale").getAsString().strip();
-            return new ArtDirection(prompt, rationale, "ChatGPT");
+            List<Citation> citations = new ArrayList<>();
+            if (obj.has("citations") && obj.get("citations").isJsonArray()) {
+                for (var element : obj.getAsJsonArray("citations")) {
+                    JsonObject c = element.getAsJsonObject();
+                    if (c.has("quote") && c.has("headline")) {
+                        citations.add(new Citation(
+                                c.get("quote").getAsString(), c.get("headline").getAsString(), null, null));
+                    }
+                }
+            }
+            return new ArtDirection(prompt, rationale, "ChatGPT", ModelLabel.humanize(model), citations);
         } catch (RuntimeException e) {
             throw new IOException("Unexpected ChatGPT JSON response shape: " + text, e);
         }

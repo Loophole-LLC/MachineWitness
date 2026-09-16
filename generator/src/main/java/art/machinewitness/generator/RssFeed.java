@@ -52,12 +52,13 @@ final class RssFeed {
 
     private static String item(ManifestEntry entry, Piece piece) {
         String artistSlug = piece.artist().toLowerCase(Locale.US);
+        String label = piece.model() != null && !piece.model().isBlank() ? piece.model() : piece.artist();
         String guid = SITE_URL + "#" + entry.version() + "-" + artistSlug;
         String pubDate = RFC_822.format(Instant.parse(entry.generatedAt()));
-        String description = "Prompt: " + piece.prompt() + " — Why " + piece.artist()
+        String description = "Prompt: " + piece.prompt() + " — Why " + label
                 + " made this: " + piece.rationale();
         return "<item>\n"
-                + "<title>" + escape(piece.artist() + "'s take on AI news, week " + entry.version()
+                + "<title>" + escape(label + "'s take on AI news, week " + entry.version()
                         + " (" + entry.date() + ")") + "</title>\n"
                 + "<link>" + SITE_URL + "</link>\n"
                 + "<guid isPermaLink=\"false\">" + escape(guid) + "</guid>\n"

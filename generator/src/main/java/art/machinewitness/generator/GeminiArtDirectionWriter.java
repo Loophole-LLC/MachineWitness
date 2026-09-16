@@ -5,6 +5,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Asks Gemini to turn this week's real AI-industry headlines into one piece of art. Uses
@@ -54,7 +56,7 @@ public final class GeminiArtDirectionWriter implements ArtDirectionWriter {
         body.add("generationConfig", generationConfig);
 
         JsonObject response = api.generateContent(model, body);
-        return parseDirection(extractText(response));
+        return parseDirection(extractText(response), model);
     }
 
     private static JsonObject responseSchema() {
@@ -64,6 +66,7 @@ public final class GeminiArtDirectionWriter implements ArtDirectionWriter {
         JsonObject properties = new JsonObject();
         properties.add("prompt", stringType);
         properties.add("rationale", stringType);
+        properties.add("citations", citationsSchema());
 
         JsonArray required = new JsonArray();
         required.add("prompt");
@@ -76,12 +79,43 @@ public final class GeminiArtDirectionWriter implements ArtDirectionWriter {
         return schema;
     }
 
-    private static ArtDirection parseDirection(String json) throws IOException {
+    private static JsonObject citationsSchema() {
+        JsonObject stringType = new JsonObject();
+        stringType.addProperty("type", "STRING");
+
+        JsonObject citationProperties = new JsonObject();
+        citationProperties.add("quote", stringType);
+        citationProperties.add("headline", stringType);
+
+        JsonArray citationRequired = new JsonArray();
+        citationRequired.add("quote");
+        citationRequired.add("headline");
+
+        JsonObject citationItem = new JsonObject();
+        citationItem.addProperty("type", "OBJECT");
+        citationItem.add("properties", citationProperties);
+        citationItem.add("required", citationRequired);
+
+        JsonObject citationsArray = new JsonObject();
+        citationsArray.addProperty("type", "ARRAY");
+        citationsArray.add("items", citationItem);
+        return citationsArray;
+    }
+
+    private static ArtDirection parseDirection(String json, String model) throws IOException {
         try {
             JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
             String prompt = obj.get("prompt").getAsString().strip();
             String rationale = obj.get("rationale").getAsString().strip();
-            return new ArtDirection(prompt, rationale, "Gemini");
+            List<Citation> citations = new ArrayList<>();
+            if (obj.has("citations") && obj.get("citations").isJsonArray()) {
+                for (var element : obj.getAsJsonArray("citations")) {
+                    JsonObject c = element.getAsJsonObject();
+                    citations.add(new Citation(
+                            c.get("quote").getAsString(), c.get("headline").getAsString(), null, null));
+                }
+            }
+            return new ArtDirection(prompt, rationale, "Gemini", ModelLabel.humanize(model), citations);
         } catch (RuntimeException e) {
             throw new IOException("Unexpected Gemini JSON response shape: " + json, e);
         }

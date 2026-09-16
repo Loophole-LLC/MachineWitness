@@ -134,8 +134,14 @@
     return "artist-" + String(artist || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   }
 
+  /** Falls back to the generic provider name for any piece published before per-piece model
+   * versions existed, so a stale cached entry never renders as literally "undefined". */
+  function modelLabel(piece) {
+    return piece.model || piece.artist;
+  }
+
   function pieceAltText(entry, piece) {
-    return piece.artist + "'s AI-generated art reacting to AI industry news, week " +
+    return modelLabel(piece) + "'s AI-generated art reacting to AI industry news, week " +
       entry.version + " (" + (entry.date || "") + ")";
   }
 
@@ -148,9 +154,9 @@
       return {
         "@type": "VisualArtwork",
         "position": i + 1,
-        "name": item.piece.artist + "'s take on AI news, week " + entry.version,
+        "name": modelLabel(item.piece) + "'s take on AI news, week " + entry.version,
         "image": item.piece.imageUrl,
-        "creator": { "@type": "Organization", "name": item.piece.artist },
+        "creator": { "@type": "Organization", "name": modelLabel(item.piece) },
         "dateCreated": entry.generatedAt || undefined,
         "description": item.piece.rationale,
         "artMedium": "AI-generated digital art",
@@ -182,7 +188,7 @@
       escapeAttr(pieceKey(entry, piece)) + "\">" +
       "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
       "\" fetchpriority=\"high\" decoding=\"async\" />" +
-      "<span class=\"artist-label\">" + escapeHtml(piece.artist) + "</span>" +
+      "<span class=\"artist-label\">" + escapeHtml(modelLabel(piece)) + "</span>" +
       "</button>"
     );
   }
@@ -195,7 +201,7 @@
       escapeAttr(pieceKey(entry, piece)) + "\">" +
       "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
       "\" loading=\"lazy\" />" +
-      "<span class=\"card-caption\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(piece.artist) + "</span>" +
+      "<span class=\"card-caption\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(modelLabel(piece)) + "</span>" +
       "</button>"
     );
   }
@@ -209,11 +215,11 @@
       "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
       "\" />" +
       "</a>" +
-      "<span class=\"artist-label\">" + escapeHtml(piece.artist) + "</span>" +
+      "<span class=\"artist-label\">" + escapeHtml(modelLabel(piece)) + "</span>" +
       "</figure>" +
       "<p class=\"version-line\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") +
-      " &middot; " + escapeHtml(piece.artist) + "</p>" +
-      "<p class=\"prompt-label\">" + escapeHtml(piece.artist) + "'s prompt</p>" +
+      " &middot; " + escapeHtml(modelLabel(piece)) + "</p>" +
+      "<p class=\"prompt-label\">" + escapeHtml(modelLabel(piece)) + "'s prompt</p>" +
       "<p class=\"prompt\">" + escapeHtml(piece.prompt || "") + "</p>" +
       renderRationale(piece) +
       renderHighlights(entry) +
@@ -227,10 +233,59 @@
     }
     return (
       "<blockquote class=\"rationale\">" +
-      "<p class=\"rationale-label\">Why " + escapeHtml(piece.artist) + " made this</p>" +
-      "<p class=\"rationale-text\">" + escapeHtml(piece.rationale) + "</p>" +
+      "<p class=\"rationale-label\">Why " + escapeHtml(modelLabel(piece)) + " made this</p>" +
+      "<p class=\"rationale-text\">" + renderRationaleText(piece) + "</p>" +
       "</blockquote>"
     );
+  }
+
+  /** Wraps each citation's quote (a short, verbatim substring of the rationale, validated
+   * server-side against that week's real feed items) in a link back to the actual headline it's
+   * citing, with a hover tooltip naming that headline. Re-validates the substring match here too
+   * - a citation the server resolved is still just data, and this is the code that decides where
+   * in the DOM it gets spliced in. */
+  function renderRationaleText(piece) {
+    var text = piece.rationale || "";
+    var citations = (piece.citations || []).filter(function (c) {
+      return c && c.quote && c.url;
+    });
+    if (citations.length === 0) {
+      return escapeHtml(text);
+    }
+
+    var ranges = [];
+    citations.forEach(function (c) {
+      var start = text.indexOf(c.quote);
+      if (start === -1) {
+        return;
+      }
+      var end = start + c.quote.length;
+      var overlaps = ranges.some(function (r) {
+        return start < r.end && end > r.start;
+      });
+      if (!overlaps) {
+        ranges.push({ start: start, end: end, citation: c });
+      }
+    });
+    if (ranges.length === 0) {
+      return escapeHtml(text);
+    }
+    ranges.sort(function (a, b) {
+      return a.start - b.start;
+    });
+
+    var html = "";
+    var cursor = 0;
+    ranges.forEach(function (r) {
+      var c = r.citation;
+      var tooltip = (c.source ? c.source + ": " : "") + c.headline;
+      html += escapeHtml(text.slice(cursor, r.start));
+      html += "<a class=\"citation\" href=\"" + escapeAttr(c.url) + "\" target=\"_blank\" rel=\"noopener\" " +
+        "data-tooltip=\"" + escapeAttr(tooltip) + "\">" + escapeHtml(text.slice(r.start, r.end)) + "</a>";
+      cursor = r.end;
+    });
+    html += escapeHtml(text.slice(cursor));
+    return html;
   }
 
   function renderHighlights(entry) {
