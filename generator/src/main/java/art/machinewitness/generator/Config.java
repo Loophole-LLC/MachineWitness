@@ -24,9 +24,9 @@ public record Config(
 ) {
 
     private static final String DEFAULT_IMAGE_MODEL = "gemini-3-pro-image";
-    private static final String DEFAULT_GEMINI_MODEL = "gemini-3.7-flash";
+    private static final String DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
     private static final String DEFAULT_ANTHROPIC_MODEL = "claude-opus-5";
-    private static final String DEFAULT_OPENAI_MODEL = "gpt-5.6";
+    private static final String DEFAULT_OPENAI_MODEL = "gpt-6-astra";
 
     public static Config fromEnv(String[] args) {
         Map<String, String> env = System.getenv();
