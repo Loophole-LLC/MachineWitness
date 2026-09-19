@@ -243,10 +243,53 @@ Then create the DNS records Google Cloud prints.
 
 ## Redeploying after a code change
 
+Run this from a fresh shell at the repo root. It doesn't rely on variables from the first-time
+setup above, and every command names its project, so it can't land in whichever project
+`gcloud config` happens to have active (otherwise the site step deploys a second, public
+`machinewitness-site` into that project and leaves the real one untouched).
+
 ```bash
-cd site && gcloud builds submit --config cloudbuild.yaml --substitutions=_REGION=$REGION,_GCS_BUCKET=$BUCKET
-cd ../generator && gcloud builds submit --config cloudbuild.yaml
-# then update the job to the new image tag it prints:
-gcloud run jobs update machinewitness-generator --region $REGION \
+PROJECT_ID=$(gcloud projects list --filter='name="Machine Witness"' --format='value(projectId)')
+REGION=us-central1
+BUCKET="${PROJECT_ID}-machinewitness-gallery"
+```
+
+`${PROJECT_ID:?}` in the commands below stops them if that lookup came back empty.
+
+**Site** (anything under `site/`):
+
+```bash
+cd site
+gcloud builds submit --project=${PROJECT_ID:?} --config cloudbuild.yaml \
+  --substitutions=_REGION=$REGION,_GCS_BUCKET=$BUCKET
+```
+
+Always pass `_GCS_BUCKET`: `cloudbuild.yaml` writes it to the service's `GCS_BUCKET` env var, and
+an empty value blanks the gallery.
+
+**Generator** (anything under `generator/`):
+
+```bash
+cd generator
+gcloud builds submit --project=${PROJECT_ID:?} --config cloudbuild.yaml
+# then point the job at the new image tag it prints:
+gcloud run jobs update machinewitness-generator --project=${PROJECT_ID:?} --region $REGION \
   --image gcr.io/$PROJECT_ID/machinewitness-generator:<new-build-id>
+```
+
+**Check it took effect.** `index.html` stamps the serving Cloud Run revision (`K_REVISION`) into
+its asset URLs, so these two commands must print the same revision name:
+
+```bash
+gcloud run services describe machinewitness-site --project=${PROJECT_ID:?} --region $REGION \
+  --format='value(status.latestReadyRevisionName)'
+curl -s "https://machinewitness.art/?cb=$RANDOM" | grep -o 'styles.css?v=[^"]*'
+```
+
+**Rolling back.** Send traffic to the previous revision (`gcloud run revisions list --service
+machinewitness-site --project=${PROJECT_ID:?} --region $REGION` lists them):
+
+```bash
+gcloud run services update-traffic machinewitness-site --project=${PROJECT_ID:?} --region $REGION \
+  --to-revisions=<previous-revision>=100
 ```
