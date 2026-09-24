@@ -64,7 +64,11 @@ public final class ArtInstruction {
             instead - who's celebrating, who's scared, who's scrambling, who's cashing in, what \
             genuinely changed in the world because of this week's news - and render that.
 
-            This week's real headlines (%s):
+            This week's real headlines. They come from RSS feeds covering %s - that range \
+            ends today, and every headline below was already published by the time this brief \
+            reached you, so nothing here is scheduled or in the future. A feed will occasionally \
+            resurface a post that was first published earlier than that; that's a quirk of the \
+            source, not a discrepancy worth writing about.
             %s
 
             Respond with a JSON object with exactly three fields:
@@ -74,7 +78,11 @@ public final class ArtInstruction {
             you made this piece this way this week - what in the news provoked this particular \
             reaction, and why this form, medium, or symbol was the honest way to carry it. This \
             gets published on the site next to the piece, so make it a real account of your \
-            reasoning, not a caption.
+            reasoning, not a caption. It runs as an artist's statement, so keep it on the news \
+            and the work: no commentary on this brief, the date range, the feeds, or your own \
+            research process, and no notes about what you could or couldn't verify. If something \
+            in the week's material strikes you as off, let it feed the piece rather than become \
+            the subject of the statement.
             - "citations": an array of 1 to 3 objects, each pointing your rationale back at the \
             specific headline that provoked it, with fields "quote" and "headline". "quote" must \
             be 3 to 8 words copied character-for-character out of the "rationale" text you just \

@@ -72,10 +72,15 @@ public final class Main {
             return;
         }
 
-        LocalDate weekStart = today.with(weekFields.dayOfWeek(), 1);
-        LocalDate weekEnd = weekStart.plusDays(6);
-        String weekLabel = weekStart.format(DateTimeFormatter.ISO_LOCAL_DATE)
-                + " to " + weekEnd.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        // Label the window the headlines actually came from - the seven days ending today - and
+        // not the calendar week weekId names. The scheduler only gets past the hasSource() check
+        // on the first firing of a new ISO week, i.e. a Monday, so a Monday-to-Sunday label
+        // described a week that had barely started: a model that did the research it was asked to
+        // do would find every article dated before the range it had been handed, and spend its
+        // published rationale arguing with the brief instead of reacting to the news.
+        LocalDate windowStart = LocalDate.ofInstant(cutoff, ZoneOffset.UTC);
+        String weekLabel = windowStart.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                + " to " + today.format(DateTimeFormatter.ISO_LOCAL_DATE);
         WeeklyDigest digest = new WeeklyDigest(weekId, weekLabel, feedDigests, total);
         System.out.println("Found " + total + " headlines across " + feedDigests.size() + " sources for " + weekId);
 
