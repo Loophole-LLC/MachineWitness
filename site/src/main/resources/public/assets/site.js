@@ -361,12 +361,18 @@
   }
 
   if (dialogEl) {
-    // Fires for every close route there is: the button, a backdrop click, and Escape.
-    dialogEl.addEventListener("close", function () {
+    // Takes the piece fragment back off the URL once the dialog is gone. Hung on both events
+    // on purpose: Escape fires "cancel" and, observed on the live site, can close the dialog
+    // without ever firing "close" - listening only for the latter left a stale permalink in the
+    // address bar, so the next share or reload reopened a piece the reader had dismissed.
+    function clearPieceUrl() {
       if (location.hash) {
         history.pushState(null, "", location.pathname + location.search);
       }
-    });
+    }
+
+    dialogEl.addEventListener("close", clearPieceUrl);
+    dialogEl.addEventListener("cancel", clearPieceUrl);
 
     window.addEventListener("popstate", function () {
       if (!openPieceFromHash() && dialogEl.open) {
