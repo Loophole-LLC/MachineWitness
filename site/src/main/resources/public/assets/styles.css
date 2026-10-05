@@ -8,11 +8,17 @@
   --accent: #a855f7;
   --accent-dim: #4c2d70;
   --max-width: 1040px;
-  /* One color per model, loosely matching each provider's own brand color, so a piece is
-     identifiable by its border alone without reading the label. */
+  /* One color per model, so a piece is identifiable by its border alone without reading the
+     label. The first three loosely match each provider's own brand color; at six models that
+     stops being possible - Mistral's orange lands on Claude's clay, DeepSeek's blue on Gemini's,
+     and xAI's black on the page background - so the last three are pulled to the nearest free
+     hue instead. Distinguishable beats brand-accurate when the border IS the label. */
   --artist-gemini: #4285f4;
   --artist-claude: #d97757;
   --artist-chatgpt: #10a37f;
+  --artist-grok: #cbd5e1;
+  --artist-deepseek: #8b5cf6;
+  --artist-mistral: #e8b32c;
 }
 
 * {
@@ -139,11 +145,28 @@ a {
   font-style: italic;
 }
 
+/* Six pieces a week, laid out 3 across and 2 down. Fixed rather than auto-fit so the week
+   always reads as one block of six and never reflows into a ragged 4+2 or 5+1 at some in-between
+   width. minmax(0, 1fr) rather than 1fr so a wide image can't push a column past its share. */
 .showcase-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+/* Three across stops being legible well before phone width, so step down to 2 then 1. A piece
+   that fails to generate just leaves the grid short - 5, 4 or 3 tiles still fill cleanly. */
+@media (max-width: 720px) {
+  .showcase-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 440px) {
+  .showcase-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .showcase-tile {
@@ -176,6 +199,9 @@ a {
 .artist-gemini { border-color: var(--artist-gemini); }
 .artist-claude { border-color: var(--artist-claude); }
 .artist-chatgpt { border-color: var(--artist-chatgpt); }
+.artist-grok { border-color: var(--artist-grok); }
+.artist-deepseek { border-color: var(--artist-deepseek); }
+.artist-mistral { border-color: var(--artist-mistral); }
 
 .artist-label {
   position: absolute;
@@ -192,6 +218,9 @@ a {
 .artist-gemini .artist-label { color: var(--artist-gemini); }
 .artist-claude .artist-label { color: var(--artist-claude); }
 .artist-chatgpt .artist-label { color: var(--artist-chatgpt); }
+.artist-grok .artist-label { color: var(--artist-grok); }
+.artist-deepseek .artist-label { color: var(--artist-deepseek); }
+.artist-mistral .artist-label { color: var(--artist-mistral); }
 
 .disclosure {
   margin: 0 0 0.75rem;

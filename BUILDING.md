@@ -63,15 +63,31 @@ Gemini, and writes `./out/images/<week-id>-gemini.png` + `./out/manifest.json` (
 `imageUrl`, so it also works as a web root - see next). Running it again the same week is a safe
 no-op once that week is in the manifest.
 
-**Add Claude and/or ChatGPT to the comparison** by also setting `ANTHROPIC_API_KEY` (from
-[console.anthropic.com](https://console.anthropic.com/settings/keys)) and/or `OPENAI_API_KEY`
-(from [platform.openai.com](https://platform.openai.com/api-keys)) - both need billing enabled
-on their respective accounts, same as Gemini. Each is entirely optional: the generator only asks
-a model to write a piece once its key is set, so it runs fine with just Gemini while the other
-two are being provisioned, or with all three for the full weekly comparison.
+**Add the other five models to the comparison** by setting their keys too - all optional, all
+needing billing enabled on their own account the same way Gemini does:
+
+| Model | Key | From |
+|-------|-----|------|
+| Claude | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
+| ChatGPT | `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com/api-keys) |
+| Grok | `XAI_API_KEY` | [console.x.ai](https://console.x.ai/) |
+| DeepSeek | `DEEPSEEK_API_KEY` + `TAVILY_API_KEY` | [platform.deepseek.com](https://platform.deepseek.com/api_keys), [tavily.com](https://app.tavily.com/) |
+| Mistral | `MISTRAL_API_KEY` | [console.mistral.ai](https://console.mistral.ai/api-keys/) |
+
+The generator only asks a model for a piece once its key is set, so it runs fine with just
+Gemini while the rest are being provisioned, and a model can be dropped for a week by unsetting
+one variable.
+
+DeepSeek is the exception that needs two keys. Every other model researches the week with its
+own lab's built-in web search; DeepSeek's API has no such tool, so its searches are run
+client-side against [Tavily](https://tavily.com) and fed back to it. Without `TAVILY_API_KEY` it
+would be reacting to bare headlines while the other five did the reading, so it's skipped rather
+than run on a different brief.
 
 ```bash
-GEMINI_API_KEY=your-key ANTHROPIC_API_KEY=your-key OPENAI_API_KEY=your-key LOCAL_OUT=./out \
+GEMINI_API_KEY=your-key ANTHROPIC_API_KEY=your-key OPENAI_API_KEY=your-key \
+  XAI_API_KEY=your-key DEEPSEEK_API_KEY=your-key TAVILY_API_KEY=your-key \
+  MISTRAL_API_KEY=your-key LOCAL_OUT=./out \
   java -jar generator/target/machinewitness-generator-1.0.0.jar
 ```
 
@@ -97,19 +113,28 @@ every request.
 | `GCS_BUCKET`      | both      | yes in production                   | Generator writes here; site reads from here client-side. Not needed if `LOCAL_OUT` is set. |
 | `LOCAL_OUT`       | generator | no                                   | Local dir instead of GCS - dev/test only. |
 | `LOCAL_GALLERY_DIR` | site    | no                                   | Serves manifest.json/images from this local dir instead of GCS - pair with the generator's `LOCAL_OUT` to preview the real gallery page. Dev/test only. |
-| `GEMINI_MODEL`    | generator | no (default `gemini-3.7-flash`)      | Writes Gemini's art prompt + rationale from this week's headlines. |
+| `GEMINI_MODEL`    | generator | no (default `gemini-3.8-flash`)      | Writes Gemini's art prompt + rationale from this week's headlines. |
 | `IMAGE_MODEL`     | generator | no (default `gemini-3-pro-image`)    | "Nano banana" pro tier - renders every piece's image, regardless of which model wrote its prompt. **Check this against Google's current model list before deploying** - image model IDs change over time and this default may lag. |
 | `ANTHROPIC_API_KEY` | generator | no                                | Anthropic Console key, billing-enabled. Claude only joins the weekly comparison once this is set. |
-| `ANTHROPIC_MODEL` | generator | no (default `claude-opus-5`)         | Writes Claude's art prompt + rationale, researched with Claude's native web search tool. |
+| `ANTHROPIC_MODEL` | generator | no (default `claude-opus-5-5`)       | Writes Claude's art prompt + rationale, researched with Claude's native web search tool. |
 | `OPENAI_API_KEY`  | generator | no                                    | OpenAI Platform key, billing-enabled (the API is prepaid - adding a card alone may not add usable credit, see the account's Billing page). ChatGPT only joins once this is set. |
-| `OPENAI_MODEL`    | generator | no (default `gpt-5.6-sol`)           | Writes ChatGPT's art prompt + rationale, researched via the Responses API's web search tool. Sol is GPT-5.6's flagship tier - checked 2026-09-01. |
+| `OPENAI_MODEL`    | generator | no (default `gpt-6-astra`)           | Writes ChatGPT's art prompt + rationale, researched via the Responses API's web search tool. |
+| `XAI_API_KEY`     | generator | no                                    | xAI console key, billing-enabled. Grok only joins once this is set. |
+| `XAI_MODEL`       | generator | no (default `grok-4.7`)              | Writes Grok's art prompt + rationale. xAI serves an OpenAI-Responses-compatible API, so this reuses the ChatGPT writer's SDK against `api.x.ai` with a `web_search` tool - Grok's search reads X alongside the open web. |
+| `DEEPSEEK_API_KEY` | generator | no                                   | DeepSeek platform key. DeepSeek only joins once this **and** `TAVILY_API_KEY` are set. |
+| `DEEPSEEK_MODEL`  | generator | no (default `deepseek-v4-pro`)       | Writes DeepSeek's art prompt + rationale over OpenAI-compatible chat completions, researched through a client-side `web_search` tool loop. |
+| `TAVILY_API_KEY`  | generator | no (required for DeepSeek)           | Search backend for DeepSeek only - the one model here with no web search of its own. Disclosed on the site, since it's the single place the weekly comparison isn't like-for-like. |
+| `MISTRAL_API_KEY` | generator | no                                    | Mistral console key. Mistral only joins once this is set. |
+| `MISTRAL_MODEL`   | generator | no (default `mistral-medium-latest`) | Writes Mistral's art prompt + rationale via the agent-less Conversations API (`/v1/conversations`, `store: false`), the only endpoint where Mistral's built-in `web_search` tool is supported. The concrete version the alias resolves to is read back off the response and published as the label. |
 | `PORT`            | site      | no (default `8080`)                  | Cloud Run sets this automatically. |
 
 ## Deploying to GCP
 
-This creates real, billable resources (Cloud Run, a Cloud Storage bucket, and paid Gemini, Claude,
-and ChatGPT API calls once the scheduler starts firing for real - three models' worth of calls a
-week now instead of one).
+This creates real, billable resources (Cloud Run, a Cloud Storage bucket, and paid Gemini,
+Claude, ChatGPT, Grok, DeepSeek, Mistral and Tavily API calls once the scheduler starts firing
+for real - six models' worth of research and six image renders a week, where this started at
+one). Every model also runs live web search as part of its brief, which is the expensive part of
+a run, not the image.
 
 ### 1. Project + APIs
 
@@ -142,14 +167,18 @@ gsutil cors set /tmp/cors.json gs://$BUCKET
 
 ### 3. API keys as secrets
 
-Gemini is required; Claude and ChatGPT are each optional - skip either secret (and its binding
-in step 4, and its `--set-secrets` entry in step 6) to run the comparison with fewer than three
-models.
+Gemini is required; every other model is optional - skip its secret (and its binding in step 4,
+and its `--set-secrets` entry in step 6) to run the comparison with fewer than six models.
+`tavily-api-key` is DeepSeek's web search and is only needed alongside `deepseek-api-key`.
 
 ```bash
 echo -n "your-gemini-api-key" | gcloud secrets create gemini-api-key --data-file=-
 echo -n "your-anthropic-api-key" | gcloud secrets create anthropic-api-key --data-file=-
 echo -n "your-openai-api-key" | gcloud secrets create openai-api-key --data-file=-
+echo -n "your-xai-api-key" | gcloud secrets create xai-api-key --data-file=-
+echo -n "your-deepseek-api-key" | gcloud secrets create deepseek-api-key --data-file=-
+echo -n "your-tavily-api-key" | gcloud secrets create tavily-api-key --data-file=-
+echo -n "your-mistral-api-key" | gcloud secrets create mistral-api-key --data-file=-
 ```
 
 ### 4. A dedicated, least-privilege service account for the generator
@@ -162,7 +191,8 @@ gsutil iam ch \
   serviceAccount:machinewitness-generator@${PROJECT_ID}.iam.gserviceaccount.com:objectAdmin \
   gs://$BUCKET
 
-for secret in gemini-api-key anthropic-api-key openai-api-key; do
+for secret in gemini-api-key anthropic-api-key openai-api-key xai-api-key \
+  deepseek-api-key tavily-api-key mistral-api-key; do
   gcloud secrets add-iam-policy-binding $secret \
     --member="serviceAccount:machinewitness-generator@${PROJECT_ID}.iam.gserviceaccount.com" \
     --role="roles/secretmanager.secretAccessor"
@@ -200,7 +230,7 @@ gcloud run jobs deploy machinewitness-generator \
   --image gcr.io/$PROJECT_ID/machinewitness-generator:<build-id> \
   --region $REGION \
   --service-account machinewitness-generator@${PROJECT_ID}.iam.gserviceaccount.com \
-  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest,OPENAI_API_KEY=openai-api-key:latest \
+  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest,OPENAI_API_KEY=openai-api-key:latest,XAI_API_KEY=xai-api-key:latest,DEEPSEEK_API_KEY=deepseek-api-key:latest,TAVILY_API_KEY=tavily-api-key:latest,MISTRAL_API_KEY=mistral-api-key:latest \
   --set-env-vars GCS_BUCKET=$BUCKET \
   --max-retries 1
 

@@ -39,8 +39,9 @@ final class RssFeed {
                 + "<channel>\n"
                 + "<title>Machine Witness</title>\n"
                 + "<link>" + SITE_URL + "</link>\n"
-                + "<description>" + escape("Every week, Gemini, Claude, and ChatGPT each research real AI "
-                + "industry news and turn their own opinion into art, with a published rationale for why.")
+                + "<description>" + escape("Every week, Gemini, Claude, ChatGPT, Grok, DeepSeek and "
+                + "Mistral each research real AI industry news and turn their own opinion into art, "
+                + "with a published rationale for why.")
                 + "</description>\n"
                 + "<language>en-us</language>\n"
                 + "<atom:link href=\"" + SITE_URL + "feed.xml\" rel=\"self\" type=\"application/rss+xml\" />\n"

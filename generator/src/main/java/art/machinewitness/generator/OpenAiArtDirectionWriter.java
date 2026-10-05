@@ -1,7 +1,5 @@
 package art.machinewitness.generator;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.responses.Response;
@@ -10,8 +8,6 @@ import com.openai.models.responses.ResponseOutputItem;
 import com.openai.models.responses.WebSearchTool;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Asks ChatGPT to turn this week's real AI-industry headlines into one piece of art. Uses
@@ -52,40 +48,6 @@ public final class OpenAiArtDirectionWriter implements ArtDirectionWriter {
                 .findFirst()
                 .orElseThrow(() -> new IOException("ChatGPT response had no output text"));
 
-        return parseDirection(text, model);
-    }
-
-    private static ArtDirection parseDirection(String text, String model) throws IOException {
-        try {
-            JsonObject obj = JsonParser.parseString(extractJsonObject(text)).getAsJsonObject();
-            String prompt = obj.get("prompt").getAsString().strip();
-            String rationale = obj.get("rationale").getAsString().strip();
-            List<Citation> citations = new ArrayList<>();
-            if (obj.has("citations") && obj.get("citations").isJsonArray()) {
-                for (var element : obj.getAsJsonArray("citations")) {
-                    JsonObject c = element.getAsJsonObject();
-                    if (c.has("quote") && c.has("headline")) {
-                        citations.add(new Citation(
-                                c.get("quote").getAsString(), c.get("headline").getAsString(), null, null));
-                    }
-                }
-            }
-            return new ArtDirection(prompt, rationale, "ChatGPT", ModelLabel.humanize(model), citations);
-        } catch (RuntimeException e) {
-            throw new IOException("Unexpected ChatGPT JSON response shape: " + text, e);
-        }
-    }
-
-    /**
-     * ChatGPT isn't schema-constrained here, so defensively pull out just the {...} body in case
-     * it wraps the JSON in prose or a markdown code fence despite being told not to.
-     */
-    private static String extractJsonObject(String text) throws IOException {
-        int start = text.indexOf('{');
-        int end = text.lastIndexOf('}');
-        if (start < 0 || end < start) {
-            throw new IOException("No JSON object found in ChatGPT response: " + text);
-        }
-        return text.substring(start, end + 1);
+        return ArtDirectionJson.parse(text, "ChatGPT", model);
     }
 }

@@ -10,12 +10,16 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Entry point for the Machine Witness generator. Run on a schedule (Cloud Scheduler -> Cloud Run Job in
  * production): once a week, pulls the last 7 days of headlines from the Turing Institute's AI
- * RSS feed list and asks Gemini, Claude, and ChatGPT to each independently turn them into their
- * own piece of art - same headlines, same instruction, three takes.
+ * RSS feed list and asks Gemini, Claude, ChatGPT, Grok, DeepSeek and Mistral to each
+ * independently turn them into their own piece of art - same headlines, same instruction, six
+ * takes. The brief they get is identical and deliberately unprescriptive about form and style
+ * (see ArtInstruction): whatever each model's work has in common with its own past work is
+ * something it brought, not something this project told it to be.
  */
 public final class Main {
 
@@ -84,18 +88,29 @@ public final class Main {
         WeeklyDigest digest = new WeeklyDigest(weekId, weekLabel, feedDigests, total);
         System.out.println("Found " + total + " headlines across " + feedDigests.size() + " sources for " + weekId);
 
+        // Six independent takes on one brief. Gemini is unconditional - it renders every
+        // image regardless of who wrote the prompt, so its key is the one hard requirement.
         Map<String, ArtDirectionWriter> writers = new LinkedHashMap<>();
         writers.put("gemini", new GeminiArtDirectionWriter(config.geminiApiKey(), config.geminiModel()));
-        if (config.anthropicApiKey() != null && !config.anthropicApiKey().isBlank()) {
-            writers.put("claude", new ClaudeArtDirectionWriter(config.anthropicApiKey(), config.anthropicModel()));
+        addIfKeyed(writers, "claude", "Claude", "ANTHROPIC_API_KEY", config.anthropicApiKey(),
+                () -> new ClaudeArtDirectionWriter(config.anthropicApiKey(), config.anthropicModel()));
+        addIfKeyed(writers, "chatgpt", "ChatGPT", "OPENAI_API_KEY", config.openaiApiKey(),
+                () -> new OpenAiArtDirectionWriter(config.openaiApiKey(), config.openaiModel()));
+        addIfKeyed(writers, "grok", "Grok", "XAI_API_KEY", config.xaiApiKey(),
+                () -> new GrokArtDirectionWriter(config.xaiApiKey(), config.xaiModel()));
+        // DeepSeek is the one model with no web search of its own, so it needs a search key on
+        // top of its own - without one it would be answering a different brief than the rest.
+        if (config.deepseekApiKey() != null && !config.deepseekApiKey().isBlank()
+                && (config.tavilyApiKey() == null || config.tavilyApiKey().isBlank())) {
+            System.out.println("Skipping DeepSeek - DEEPSEEK_API_KEY is set but TAVILY_API_KEY "
+                    + "isn't, and DeepSeek has no web search of its own to fall back on.");
         } else {
-            System.out.println("Skipping Claude - no ANTHROPIC_API_KEY set.");
+            addIfKeyed(writers, "deepseek", "DeepSeek", "DEEPSEEK_API_KEY", config.deepseekApiKey(),
+                    () -> new DeepSeekArtDirectionWriter(
+                            config.deepseekApiKey(), config.deepseekModel(), config.tavilyApiKey()));
         }
-        if (config.openaiApiKey() != null && !config.openaiApiKey().isBlank()) {
-            writers.put("chatgpt", new OpenAiArtDirectionWriter(config.openaiApiKey(), config.openaiModel()));
-        } else {
-            System.out.println("Skipping ChatGPT - no OPENAI_API_KEY set.");
-        }
+        addIfKeyed(writers, "mistral", "Mistral", "MISTRAL_API_KEY", config.mistralApiKey(),
+                () -> new MistralArtDirectionWriter(config.mistralApiKey(), config.mistralModel()));
 
         // Looked up by exact headline title so a citation can only ever point at a real item from
         // this week's actual feeds, never a model-hallucinated one - see resolveCitations().
@@ -141,8 +156,8 @@ public final class Main {
                 pieces.add(new Piece(direction.writtenBy(), direction.model(), direction.prompt(),
                         direction.rationale(), citations, imageUrl));
             } catch (Exception e) {
-                // One provider's outage, billing issue, or bad response shouldn't cost the other
-                // two their completed work - skip it and publish whichever pieces did succeed.
+                // One provider's outage, billing issue, or bad response shouldn't cost the
+                // others their completed work - skip it and publish whichever pieces succeeded.
                 System.out.println("Skipping " + slug + " this week - " + e.getMessage());
             }
         }
@@ -169,6 +184,20 @@ public final class Main {
         store.saveFeed(manifest);
 
         System.out.println("Published " + pieces.size() + " piece(s) for " + weekId + ".");
+    }
+
+    /**
+     * Adds one model to the weekly comparison if its key is present, and says so in the log if
+     * it isn't. Every provider past Gemini is optional on purpose: a model can be added while
+     * its key is still being provisioned, or dropped for a week, by one env var.
+     */
+    private static void addIfKeyed(Map<String, ArtDirectionWriter> writers, String slug, String name,
+            String envVar, String apiKey, Supplier<ArtDirectionWriter> writer) {
+        if (apiKey == null || apiKey.isBlank()) {
+            System.out.println("Skipping " + name + " - no " + envVar + " set.");
+            return;
+        }
+        writers.put(slug, writer.get());
     }
 
     private static final int MAX_CITATIONS_PER_PIECE = 3;

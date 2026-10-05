@@ -120,9 +120,11 @@
     return (
       "<div class=\"showcase-grid\">" + tiles + "</div>" +
       "<p class=\"version-line\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") + "</p>" +
-      "<p class=\"disclosure\">Gemini, Claude, and ChatGPT each research this week's AI news and write " +
-      "their own prompt and rationale independently &mdash; every image is rendered by Gemini's " +
-      "image model (nano banana), so the only variable between them is the opinion, not the medium.</p>" +
+      "<p class=\"disclosure\">Gemini, Claude, ChatGPT, Grok, DeepSeek and Mistral each research " +
+      "this week's AI news and write their own prompt and rationale independently, from one " +
+      "identical brief &mdash; every image is rendered by Gemini's image model (nano banana), so " +
+      "the only variable between them is the opinion, not the medium. Five search the web with " +
+      "their own lab's tool; DeepSeek's API has none, so its research runs through Tavily.</p>" +
       renderHighlights(entry) +
       "<p class=\"source-line\"><a href=\"" + escapeAttr(entry.sourceUrl || "#") + "\" target=\"_blank\" rel=\"noopener\">Explore this week's AI news sources &#8599;</a></p>"
     );
