@@ -1,9 +1,11 @@
 package art.machinewitness.generator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Turns a raw API model id (e.g. "claude-opus-5", "gpt-5.6", "gemini-3.7-flash") into the
+ * Turns a raw API model id (e.g. "claude-opus-5-5", "gpt-6-astra", "gemini-3.8-flash") into the
  * human-readable label published next to each piece, so the site always shows exactly which
  * model version made it instead of just the generic provider name - and so that label updates
  * itself automatically whenever any of the *_MODEL defaults move to a new flagship, with
@@ -16,11 +18,19 @@ final class ModelLabel {
             "gpt", "GPT",
             "deepseek", "DeepSeek");
 
+    /**
+     * Longest numeric segment still treated as part of a version number. Providers use the same
+     * hyphen for both jobs: "claude-opus-5-5" means Opus 5.5, while "claude-haiku-4-5-20251001"
+     * means Haiku 4.5 released on a date. Two digits covers every major.minor in use and leaves
+     * release stamps (20251001) and build numbers (2508) as their own word.
+     */
+    private static final int MAX_VERSION_PART_DIGITS = 2;
+
     private ModelLabel() {
     }
 
     static String humanize(String modelId) {
-        StringBuilder label = new StringBuilder();
+        List<String> words = new ArrayList<>();
         for (String word : modelId.split("-")) {
             if (word.isEmpty()) {
                 continue;
@@ -31,13 +41,29 @@ final class ModelLabel {
             if (word.equalsIgnoreCase("latest")) {
                 continue;
             }
-            if (label.length() > 0) {
-                label.append(' ');
+            // "5" following "5" is the back half of a version the provider split on a hyphen -
+            // rejoin it rather than publishing "Claude Opus 5 5".
+            if (!words.isEmpty() && isVersionPart(word) && isVersionPart(words.get(words.size() - 1))) {
+                words.set(words.size() - 1, words.get(words.size() - 1) + "." + word);
+                continue;
             }
             String special = SPECIAL_CASED.get(word.toLowerCase());
-            label.append(special != null ? special : capitalize(word));
+            words.add(special != null ? special : capitalize(word));
         }
-        return label.toString();
+        return String.join(" ", words);
+    }
+
+    /** A bare number short enough to be a major or minor version rather than a release stamp. */
+    private static boolean isVersionPart(String word) {
+        if (word.isEmpty() || word.length() > MAX_VERSION_PART_DIGITS) {
+            return false;
+        }
+        for (int i = 0; i < word.length(); i++) {
+            if (!Character.isDigit(word.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static String capitalize(String word) {
