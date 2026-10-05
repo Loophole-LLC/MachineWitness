@@ -17,6 +17,7 @@ public final class LocalGalleryStore implements GalleryStore {
     public LocalGalleryStore(String outDir) throws IOException {
         this.outDir = Path.of(outDir);
         Files.createDirectories(this.outDir.resolve("images"));
+        Files.createDirectories(this.outDir.resolve("thumbs"));
     }
 
     @Override
@@ -43,6 +44,13 @@ public final class LocalGalleryStore implements GalleryStore {
     public String publishImage(String version, String artistSlug, byte[] pngBytes) throws IOException {
         String relativePath = "images/" + version + "-" + artistSlug + ".png";
         Files.write(outDir.resolve(relativePath), pngBytes);
+        return relativePath;
+    }
+
+    @Override
+    public String publishThumbnail(String version, String artistSlug, byte[] jpegBytes) throws IOException {
+        String relativePath = "thumbs/" + version + "-" + artistSlug + ".jpg";
+        Files.write(outDir.resolve(relativePath), jpegBytes);
         return relativePath;
     }
 }

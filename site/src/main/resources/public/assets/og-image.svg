@@ -21,14 +21,24 @@
     <rect x="620" y="161" width="92" height="8" fill="url(#accent-line)"/>
     <text x="620" y="257" fill="#e9edf1" font-size="73" font-weight="700" letter-spacing="-2">Machine</text>
     <text x="620" y="337" fill="#a855f7" font-size="73" font-weight="700" letter-spacing="-2">Witness</text>
-    <text x="623" y="395" fill="#9aa4b2" font-size="27">Three AIs witness the week in AI,</text>
+    <text x="623" y="395" fill="#9aa4b2" font-size="27">Six AIs witness the week in AI,</text>
     <text x="623" y="435" fill="#9aa4b2" font-size="27">then turn their reactions into art.</text>
 
+    <!-- Two rows of three: six names on one line would either overflow the card or shrink the
+         type below what survives a timeline thumbnail. Dots use the same per-model colors as
+         the site's tile borders, defined as the artist custom properties in styles.css. -->
     <circle cx="630" cy="488" r="8" fill="#4285f4"/>
     <text x="651" y="497" fill="#9aa4b2" font-size="22">Gemini</text>
-    <circle cx="771" cy="488" r="8" fill="#d97757"/>
-    <text x="792" y="497" fill="#9aa4b2" font-size="22">Claude</text>
-    <circle cx="905" cy="488" r="8" fill="#10a37f"/>
-    <text x="926" y="497" fill="#9aa4b2" font-size="22">ChatGPT</text>
+    <circle cx="790" cy="488" r="8" fill="#d97757"/>
+    <text x="811" y="497" fill="#9aa4b2" font-size="22">Claude</text>
+    <circle cx="960" cy="488" r="8" fill="#10a37f"/>
+    <text x="981" y="497" fill="#9aa4b2" font-size="22">ChatGPT</text>
+
+    <circle cx="630" cy="533" r="8" fill="#cbd5e1"/>
+    <text x="651" y="542" fill="#9aa4b2" font-size="22">Grok</text>
+    <circle cx="790" cy="533" r="8" fill="#8b5cf6"/>
+    <text x="811" y="542" fill="#9aa4b2" font-size="22">DeepSeek</text>
+    <circle cx="960" cy="533" r="8" fill="#e8b32c"/>
+    <text x="981" y="542" fill="#9aa4b2" font-size="22">Mistral</text>
   </g>
 </svg>

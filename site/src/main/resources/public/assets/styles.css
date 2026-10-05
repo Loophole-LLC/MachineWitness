@@ -191,7 +191,10 @@ a {
   width: 100%;
   height: auto;
   display: block;
-  aspect-ratio: 4 / 3;
+  /* The image model renders landscape (currently 1408x768, ~1.83:1). A 4/3 box cropped roughly
+     a quarter of the width off every piece - including, on some weeks, the subject. 16/9 keeps
+     the grid rows even while clipping only a few percent. */
+  aspect-ratio: 16 / 9;
   object-fit: cover;
 }
 
@@ -437,7 +440,9 @@ a {
 
 .card img {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  /* Was 1/1, which cropped nearly half the width off a landscape render - the archive was
+     showing a different picture than the piece. Matches the showcase now. */
+  aspect-ratio: 16 / 9;
   object-fit: cover;
   display: block;
 }

@@ -150,11 +150,21 @@ public final class Main {
                 // cache, and every regeneration for a given week reuses the same object name, so
                 // without this a corrected/regenerated piece would keep showing viewers the stale
                 // cached PNG for up to an hour even after manifest.json had already moved on.
-                String imageUrl = store.publishImage(weekId, slug, png) + "?v=" + generatedAt.toEpochMilli();
+                String cacheBuster = "?v=" + generatedAt.toEpochMilli();
+                String imageUrl = store.publishImage(weekId, slug, png) + cacheBuster;
+                // The grid loads this instead of the ~2MB render; see Thumbnail. A failure here
+                // costs the piece its thumbnail, not its place in the gallery - the site falls
+                // back to the full image when thumbnailUrl is absent.
+                String thumbnailUrl = null;
+                try {
+                    thumbnailUrl = store.publishThumbnail(weekId, slug, Thumbnail.jpeg(png)) + cacheBuster;
+                } catch (Exception e) {
+                    System.out.println("  no thumbnail for " + slug + " - " + e.getMessage());
+                }
                 List<Citation> citations = resolveCitations(
                         direction.citations(), direction.rationale(), itemsByHeadline, sourceByHeadline);
                 pieces.add(new Piece(direction.writtenBy(), direction.model(), direction.prompt(),
-                        direction.rationale(), citations, imageUrl));
+                        direction.rationale(), citations, imageUrl, thumbnailUrl));
             } catch (Exception e) {
                 // One provider's outage, billing issue, or bad response shouldn't cost the
                 // others their completed work - skip it and publish whichever pieces succeeded.

@@ -74,9 +74,27 @@
     archiveShown = 0;
     if (archiveItems.length === 0) {
       gridEl.innerHTML = "<p class=\"empty\">This is the first week &mdash; the archive will grow with each new week.</p>";
+      openPieceFromHash();
       return;
     }
     renderNextArchivePage();
+    // Every piece is registered above regardless of archive pagination, so a deep link into a
+    // week that hasn't been paged in yet still opens.
+    openPieceFromHash();
+  }
+
+  /** Opens whichever piece the URL fragment names, if it names one we have. */
+  function openPieceFromHash() {
+    var slug = decodeURIComponent(String(location.hash || "").replace(/^#/, ""));
+    if (!slug) {
+      return false;
+    }
+    var item = piecesByKey[slug];
+    if (!item) {
+      return false;
+    }
+    openPieceDialog(item, false);
+    return true;
   }
 
   /** Flattens one manifest entry's pieces into {entry, piece} items - each piece (one model's
@@ -87,8 +105,9 @@
     });
   }
 
+  /** Doubles as the element's data-key, the piecesByKey index, and the URL fragment. */
   function pieceKey(entry, piece) {
-    return entry.version + "|" + piece.artist;
+    return pieceSlug(entry, piece);
   }
 
   function registerPiece(item) {
@@ -142,6 +161,18 @@
     return piece.model || piece.artist;
   }
 
+  /** The grid-sized JPEG, falling back to the full PNG for entries published before thumbnails
+   * existed - the archive goes back further than this feature does. */
+  function thumbnailUrl(piece) {
+    return piece.thumbnailUrl || piece.imageUrl;
+  }
+
+  /** This piece's permalink fragment. Must match the slug RssFeed builds server-side, so a feed
+   * item's link opens the very piece it describes. */
+  function pieceSlug(entry, piece) {
+    return entry.version + "-" + String(piece.artist || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
   function pieceAltText(entry, piece) {
     return modelLabel(piece) + "'s AI-generated art reacting to AI industry news, week " +
       entry.version + " (" + (entry.date || "") + ")";
@@ -188,8 +219,8 @@
     return (
       "<button type=\"button\" class=\"showcase-tile " + artistClass(piece.artist) + "\" data-key=\"" +
       escapeAttr(pieceKey(entry, piece)) + "\">" +
-      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
-      "\" fetchpriority=\"high\" decoding=\"async\" />" +
+      "<img src=\"" + escapeAttr(thumbnailUrl(piece)) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
+      "\" width=\"800\" height=\"436\" fetchpriority=\"high\" decoding=\"async\" />" +
       "<span class=\"artist-label\">" + escapeHtml(modelLabel(piece)) + "</span>" +
       "</button>"
     );
@@ -201,16 +232,21 @@
     return (
       "<button type=\"button\" class=\"card " + artistClass(piece.artist) + "\" data-key=\"" +
       escapeAttr(pieceKey(entry, piece)) + "\">" +
-      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
-      "\" loading=\"lazy\" />" +
+      "<img src=\"" + escapeAttr(thumbnailUrl(piece)) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
+      "\" width=\"800\" height=\"436\" loading=\"lazy\" decoding=\"async\" />" +
       "<span class=\"card-caption\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(modelLabel(piece)) + "</span>" +
       "</button>"
     );
   }
 
-  function openPieceDialog(item) {
+  function openPieceDialog(item, pushUrl) {
     var entry = item.entry;
     var piece = item.piece;
+    if (pushUrl !== false) {
+      // A new history entry rather than a replace, so Back closes the piece instead of leaving
+      // the site - which is what someone who arrived by clicking a tile expects.
+      history.pushState({ piece: pieceKey(entry, piece) }, "", "#" + pieceKey(entry, piece));
+    }
     dialogBodyEl.innerHTML =
       "<figure class=\"dialog-figure " + artistClass(piece.artist) + "\">" +
       "<a href=\"" + escapeAttr(piece.imageUrl) + "\" target=\"_blank\" rel=\"noopener\">" +
@@ -226,7 +262,11 @@
       renderRationale(piece) +
       renderHighlights(entry) +
       "<p class=\"source-line\"><a href=\"" + escapeAttr(entry.sourceUrl || "#") + "\" target=\"_blank\" rel=\"noopener\">Explore this week's AI news sources &#8599;</a></p>";
-    dialogEl.showModal();
+    // showModal() throws if the dialog is already open, which a Back/Forward between two piece
+    // fragments would otherwise do - the body above has already been swapped either way.
+    if (!dialogEl.open) {
+      dialogEl.showModal();
+    }
   }
 
   function renderRationale(piece) {
@@ -310,7 +350,7 @@
     if (!item) {
       return;
     }
-    openPieceDialog(item);
+    openPieceDialog(item, true);
   }
 
   if (heroEl) {
@@ -321,6 +361,19 @@
   }
 
   if (dialogEl) {
+    // Fires for every close route there is: the button, a backdrop click, and Escape.
+    dialogEl.addEventListener("close", function () {
+      if (location.hash) {
+        history.pushState(null, "", location.pathname + location.search);
+      }
+    });
+
+    window.addEventListener("popstate", function () {
+      if (!openPieceFromHash() && dialogEl.open) {
+        dialogEl.close();
+      }
+    });
+
     dialogEl.addEventListener("click", function (event) {
       if (event.target === dialogEl) {
         dialogEl.close();

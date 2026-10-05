@@ -68,6 +68,15 @@ public final class GcsGalleryStore implements GalleryStore {
         return publicUrl(name);
     }
 
+    @Override
+    public String publishThumbnail(String version, String artistSlug, byte[] jpegBytes) throws IOException, InterruptedException {
+        String name = "thumbs/" + version + "-" + artistSlug + ".jpg";
+        // Same cache-busting reasoning as publishImage: the object name is reused per week, but
+        // every published URL carries ?v=<generatedAt>.
+        upload(name, "image/jpeg", "public, max-age=31536000, immutable", jpegBytes);
+        return publicUrl(name);
+    }
+
     private void upload(String objectName, String contentType, String cacheControl, byte[] body)
             throws IOException, InterruptedException {
         String uploadUrl = "https://storage.googleapis.com/upload/storage/v1/b/" + bucket

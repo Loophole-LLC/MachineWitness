@@ -14,4 +14,7 @@ public interface GalleryStore {
 
     /** Uploads the PNG for this version/artist and returns its public URL. */
     String publishImage(String version, String artistSlug, byte[] pngBytes) throws IOException, InterruptedException;
+
+    /** Uploads the grid-sized JPEG for this version/artist and returns its public URL. */
+    String publishThumbnail(String version, String artistSlug, byte[] jpegBytes) throws IOException, InterruptedException;
 }

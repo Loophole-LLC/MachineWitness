@@ -9,9 +9,9 @@ import java.util.Locale;
  * Builds an RSS 2.0 feed from the manifest so past weeks' full text (prompts, rationales, image
  * links) are discoverable by feed readers and crawlers that don't execute the site's client-side
  * JS. One item per model per week, newest first (manifest.entries() is already stored that way).
- * There's no per-week permalink yet, so every item links back to the homepage - but each still
- * carries a stable, unique guid, the full prompt/rationale text, and an enclosure pointing at
- * that piece's actual rendered image.
+ * Each item links to that piece's own permalink - the same "#<week>-<artist>" fragment the site
+ * opens the piece dialog on - and carries a stable guid, the full prompt/rationale text, and an
+ * enclosure pointing at that piece's actual rendered image.
  */
 final class RssFeed {
 
@@ -52,17 +52,18 @@ final class RssFeed {
     }
 
     private static String item(ManifestEntry entry, Piece piece) {
-        String artistSlug = piece.artist().toLowerCase(Locale.US);
+        // Must match the fragment site.js routes on - see pieceSlug() there.
+        String artistSlug = piece.artist().toLowerCase(Locale.US).replaceAll("[^a-z0-9]", "");
         String label = piece.model() != null && !piece.model().isBlank() ? piece.model() : piece.artist();
-        String guid = SITE_URL + "#" + entry.version() + "-" + artistSlug;
+        String permalink = SITE_URL + "#" + entry.version() + "-" + artistSlug;
         String pubDate = RFC_822.format(Instant.parse(entry.generatedAt()));
         String description = "Prompt: " + piece.prompt() + " — Why " + label
                 + " made this: " + piece.rationale();
         return "<item>\n"
                 + "<title>" + escape(label + "'s take on AI news, week " + entry.version()
                         + " (" + entry.date() + ")") + "</title>\n"
-                + "<link>" + SITE_URL + "</link>\n"
-                + "<guid isPermaLink=\"false\">" + escape(guid) + "</guid>\n"
+                + "<link>" + escape(permalink) + "</link>\n"
+                + "<guid isPermaLink=\"false\">" + escape(permalink) + "</guid>\n"
                 + "<pubDate>" + pubDate + "</pubDate>\n"
                 + "<category>" + escape(piece.artist()) + "</category>\n"
                 + "<enclosure url=\"" + escape(piece.imageUrl()) + "\" type=\"image/png\" length=\"0\" />\n"

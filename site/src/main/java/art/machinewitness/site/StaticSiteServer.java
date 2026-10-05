@@ -36,6 +36,8 @@ public final class StaticSiteServer {
             Map.entry("css", "text/css; charset=utf-8"),
             Map.entry("html", "text/html; charset=utf-8"),
             Map.entry("ico", "image/x-icon"),
+            Map.entry("jpeg", "image/jpeg"),
+            Map.entry("jpg", "image/jpeg"),
             Map.entry("js", "text/javascript; charset=utf-8"),
             Map.entry("json", "application/json; charset=utf-8"),
             Map.entry("png", "image/png"),
@@ -158,12 +160,13 @@ public final class StaticSiteServer {
     }
 
     /**
-     * Local dev/preview only: serves manifest.json and images/* straight from the directory
-     * the generator's LOCAL_OUT mode wrote to, so `mvn package` + running the generator once
-     * is enough to see a real gallery page without any GCS bucket.
+     * Local dev/preview only: serves manifest.json, images/* and thumbs/* straight from the
+     * directory the generator's LOCAL_OUT mode wrote to, so `mvn package` + running the
+     * generator once is enough to see a real gallery page without any GCS bucket.
      */
     private static boolean isGalleryDataPath(String path) {
-        return "/manifest.json".equals(path) || "/feed.xml".equals(path) || path.startsWith("/images/");
+        return "/manifest.json".equals(path) || "/feed.xml".equals(path)
+                || path.startsWith("/images/") || path.startsWith("/thumbs/");
     }
 
     private static String localGalleryDir() {
