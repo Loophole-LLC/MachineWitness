@@ -278,9 +278,16 @@
       history.pushState({ mwPiece: true }, "", "#" + pieceKey(entry, piece));
     }
     var position = dialogItems.indexOf(item);
+    var prevBtn = document.getElementById("piece-prev");
+    var nextBtn = document.getElementById("piece-next");
     document.getElementById("piece-position").textContent = (position + 1) + " / " + dialogItems.length;
-    document.getElementById("piece-prev").disabled = position <= 0;
-    document.getElementById("piece-next").disabled = position >= dialogItems.length - 1;
+    // Disabling the focused button drops focus to <body>, which is outside the dialog, so the
+    // keydown listener below stops seeing anything and the arrow keys die at either end. Hand
+    // focus to the opposite button first - it is always enabled when this one is about to not be.
+    if (position <= 0 && document.activeElement === prevBtn) nextBtn.focus();
+    if (position >= dialogItems.length - 1 && document.activeElement === nextBtn) prevBtn.focus();
+    prevBtn.disabled = position <= 0;
+    nextBtn.disabled = position >= dialogItems.length - 1;
     copyBtn.textContent = "Copy link";
     document.getElementById("copy-status").textContent = "";
     dialogBodyEl.innerHTML =
@@ -432,18 +439,25 @@
   }
 
   if (dialogEl) {
+    // Hung on both events on purpose. Escape fires "cancel" and, in Chrome, closes the dialog
+    // without ever firing "close" - listening only for the latter left a stale permalink in the
+    // address bar, so the next share or reload reopened a piece the reader had dismissed. The
+    // close button fires "close" and no "cancel", so neither event alone covers both routes.
+    var clearingPieceUrl = false;
     function clearPieceUrl() {
+      // Both events can land for one dismissal, and history.back() settles asynchronously, so a
+      // second call would still see the old fragment and pop a second entry off the history.
+      if (clearingPieceUrl) return;
       var slug;
       try { slug = decodeURIComponent(location.hash.slice(1)); } catch (error) { return; }
       if (!piecesByKey[slug]) return;
+      clearingPieceUrl = true;
+      setTimeout(function () { clearingPieceUrl = false; }, 0);
       if (history.state && history.state.mwPiece) history.back();
       else history.replaceState(null, "", location.pathname + location.search);
     }
     dialogEl.addEventListener("close", clearPieceUrl);
-    dialogEl.addEventListener("cancel", function (event) {
-      event.preventDefault();
-      dialogEl.close();
-    });
+    dialogEl.addEventListener("cancel", clearPieceUrl);
     function syncDialogWithHash() {
       if (!openPieceFromHash() && dialogEl.open) dialogEl.close();
     }

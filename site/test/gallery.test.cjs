@@ -20,6 +20,18 @@ const manifest = { entries: Array.from({ length: 5 }, (_, week) => ({
 })) };
 const settle = () => new Promise(resolve => setTimeout(resolve, 20));
 
+// Escape on a modal dialog fires "cancel", and Chrome then closes it WITHOUT ever firing
+// "close" - including when the page cancels that event and calls close() itself from inside the
+// dispatch. Modelling that exactly is the point: a stub that always fires "close" hides the
+// whole class of bug where the fragment is only cleared from a "close" listener, which is what
+// shipped and left a stale permalink in the address bar.
+function pressEscape(window, dialog) {
+  const event = new window.Event('cancel', { cancelable: true });
+  window.__dispatchingCancel = true;
+  try { dialog.dispatchEvent(event); } finally { window.__dispatchingCancel = false; }
+  if (!event.defaultPrevented) dialog.open = false;
+}
+
 async function gallery(t, options = {}) {
   const dom = new JSDOM(html, { url: `https://machinewitness.art/${options.hash || ''}`, runScripts: 'outside-only' });
   const { window } = dom;
@@ -27,6 +39,7 @@ async function gallery(t, options = {}) {
   window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
   window.HTMLDialogElement.prototype.close = function () {
     this.open = false;
+    if (window.__dispatchingCancel) return;   // see pressEscape
     window.setTimeout(() => this.dispatchEvent(new window.Event('close')), 0);
   };
   window.fetch = options.fetch || (async () => ({ ok: true, json: async () => options.manifest || manifest }));
@@ -102,10 +115,41 @@ test('deep links open pieces outside the first archive page; Escape clears direc
   assert.equal($('#piece-position').textContent, '6 / 6');
   assert.equal($('#piece-next').disabled, true);
   assert.equal($('[data-key="2026-W37-mistral"]'), null);
-  $('#piece-dialog').dispatchEvent(new window.Event('cancel', { cancelable: true }));
+  pressEscape(window, $('#piece-dialog'));
   await settle();
   assert.equal($('#piece-dialog').open, false);
   assert.equal(window.location.hash, '');
+});
+
+test('Escape clears the fragment on a piece opened from the page, not just a direct link', async t => {
+  const { window, $ } = await gallery(t);
+  $('.showcase-tile').click();
+  assert.equal(window.location.hash, '#2026-W41-gemini');
+  pressEscape(window, $('#piece-dialog'));
+  await settle();
+  assert.equal($('#piece-dialog').open, false);
+  // The stale fragment is the regression: reloading or sharing it reopened a dismissed piece.
+  assert.equal(window.location.hash, '');
+  // Exactly one entry back. Clearing from both "cancel" and "close" must not pop twice, so one
+  // step forward has to land back on the piece rather than somewhere past it.
+  window.history.forward();
+  await settle();
+  assert.equal(window.location.hash, '#2026-W41-gemini');
+});
+
+test('arrow keys still work after a navigation button disables itself at either end', async t => {
+  const { window, $ } = await gallery(t);
+  $('.showcase-tile').click();
+  const next = $('#piece-next');
+  while (!next.disabled) { next.focus(); next.click(); }
+  assert.equal($('#piece-position').textContent, '6 / 6');
+  // Focus must stay inside the dialog. On <body> the dialog's keydown listener never fires and
+  // arrow navigation dies at the end of every collection.
+  assert.equal($('#piece-dialog').contains(window.document.activeElement), true);
+  assert.equal(window.document.activeElement, $('#piece-prev'));
+  window.document.activeElement.dispatchEvent(
+    new window.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+  assert.equal($('#piece-position').textContent, '5 / 6');
 });
 
 test('copy link shares the current piece and reports success', async t => {
