@@ -386,8 +386,12 @@ a {
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  /* 180px gave five columns of ~182px on a desktop container, which is too small to read a
+     piece at all. ~220px lands on four roomier columns and degrades to two then one. */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
+  /* Cards are uniform height now, but don't let a short final row stretch to fill. */
+  align-items: start;
 }
 
 .gallery-grid .empty {
@@ -440,6 +444,11 @@ a {
 
 .card img {
   width: 100%;
+  /* height:auto is load-bearing, not tidying. The img carries width/height attributes so the
+     browser can reserve space before the image loads; with both axes resolved, aspect-ratio is
+     ignored and every card was locked to the attribute's 436px, rendering the archive as a wall
+     of portrait slabs. Letting height resolve from the ratio is what makes the crop apply. */
+  height: auto;
   /* Was 1/1, which cropped nearly half the width off a landscape render - the archive was
      showing a different picture than the piece. Matches the showcase now. */
   aspect-ratio: 16 / 9;
@@ -451,7 +460,12 @@ a {
   display: block;
   padding: 0.5rem 0.65rem;
   font-size: 0.8rem;
+  line-height: 1.25;
   color: var(--text-dim);
+  /* Captions run one or two lines depending on the model's name length, which left neighbouring
+     cards ending at different heights for no reason the reader can see. Reserving two lines
+     keeps every card the same height whatever it's called. */
+  min-height: calc(2 * 1.25em + 1rem);
 }
 
 .site-footer {
