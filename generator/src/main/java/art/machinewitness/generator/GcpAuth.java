@@ -9,7 +9,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-/** Fetches an access token for the Cloud Run Job's attached service account, no key file needed. */
+/**
+ * Fetches an access token for the Cloud Run Job's attached service account, no key file needed.
+ *
+ * GOOGLE_ACCESS_TOKEN overrides it, which is how a one-off maintenance tool runs from a laptop
+ * (`GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) java -cp ...`). In production the
+ * variable is unset and this is exactly the metadata lookup it always was.
+ */
 final class GcpAuth {
 
     private static final String METADATA_URL =
@@ -18,6 +24,10 @@ final class GcpAuth {
     private final HttpClient http = HttpClient.newHttpClient();
 
     String accessToken() throws IOException, InterruptedException {
+        String explicit = System.getenv("GOOGLE_ACCESS_TOKEN");
+        if (explicit != null && !explicit.isBlank()) {
+            return explicit.strip();
+        }
         HttpRequest request = HttpRequest.newBuilder(URI.create(METADATA_URL))
                 .header("Metadata-Flavor", "Google")
                 .GET()

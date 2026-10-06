@@ -25,7 +25,7 @@ import java.util.Iterator;
  * the Cloud Run image is a lot of moving parts to save a few more kilobytes on an image this
  * size. Revisit if the grid ever becomes the bottleneck again.
  */
-final class Thumbnail {
+public final class Thumbnail {
 
     /** Wide enough to stay sharp in a ~320px tile on a 2x display without paying for the full render. */
     private static final int TARGET_WIDTH = 800;
@@ -35,7 +35,7 @@ final class Thumbnail {
     private Thumbnail() {
     }
 
-    static byte[] jpeg(byte[] pngBytes) throws IOException {
+    public static byte[] jpeg(byte[] pngBytes) throws IOException {
         BufferedImage source = ImageIO.read(new ByteArrayInputStream(pngBytes));
         if (source == null) {
             throw new IOException("Could not decode rendered image for thumbnailing");
