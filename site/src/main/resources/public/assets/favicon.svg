@@ -1,41 +1,82 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <title>Machine Witness</title>
-  <desc>A watchful eyeball with an iris formed by three distinct viewpoints.</desc>
+  <desc>A HAL-style camera lens whose iris is formed by six distinct viewpoints.</desc>
 
   <defs>
-    <radialGradient id="sclera" cx="48%" cy="45%" r="72%">
-      <stop offset="0" stop-color="#353245"/>
-      <stop offset="0.58" stop-color="#1c1e29"/>
-      <stop offset="1" stop-color="#0d1016"/>
+    <radialGradient id="sclera" cx="50%" cy="50%" r="70%">
+      <stop offset="0" stop-color="#15121a"/>
+      <stop offset="0.62" stop-color="#0d0b11"/>
+      <stop offset="1" stop-color="#050406"/>
     </radialGradient>
+    <!-- The red bloom HAL's lens throws onto its own housing. -->
+    <radialGradient id="hal-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0.60" stop-color="#ff2d1a" stop-opacity="0"/>
+      <stop offset="0.80" stop-color="#ff2d1a" stop-opacity="0.42"/>
+      <stop offset="0.93" stop-color="#8c1200" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#ff2d1a" stop-opacity="0"/>
+    </radialGradient>
+    <!-- The hot amber point at the centre of the fisheye: HAL's single defining feature. -->
+    <radialGradient id="hal-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fffdf2"/>
+      <stop offset="0.3" stop-color="#ffe9a3"/>
+      <stop offset="0.62" stop-color="#ffb02e"/>
+      <stop offset="1" stop-color="#b85c00" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lens-specular" x1="170" y1="186" x2="330" y2="250" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#ffffff" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
     <linearGradient id="gunmetal" x1="72" y1="178" x2="440" y2="340" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#5b21b6"/>
-      <stop offset="0.28" stop-color="#a855f7"/>
-      <stop offset="0.5" stop-color="#d8a2ff"/>
-      <stop offset="0.72" stop-color="#a855f7"/>
-      <stop offset="1" stop-color="#4c1d95"/>
+      <stop offset="0" stop-color="#1a1222"/>
+      <stop offset="0.22" stop-color="#4b2473"/>
+      <stop offset="0.5" stop-color="#7c3fb8"/>
+      <stop offset="0.78" stop-color="#4b2473"/>
+      <stop offset="1" stop-color="#160f1d"/>
     </linearGradient>
+    <!-- Darkens the outer half of each wedge so the centre point is the only real light source,
+         the way HAL's lens falls off into its housing. -->
+    <radialGradient id="iris-falloff" cx="50%" cy="50%" r="50%">
+      <stop offset="0.3" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.72" stop-color="#000000" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.66"/>
+    </radialGradient>
     <linearGradient id="violet-seam" x1="82" y1="0" x2="430" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#a855f7" stop-opacity="0"/>
-      <stop offset="0.24" stop-color="#a855f7" stop-opacity="0.82"/>
-      <stop offset="0.5" stop-color="#d28bff"/>
-      <stop offset="0.76" stop-color="#a855f7" stop-opacity="0.82"/>
-      <stop offset="1" stop-color="#a855f7" stop-opacity="0"/>
+      <stop offset="0" stop-color="#ff3b22" stop-opacity="0"/>
+      <stop offset="0.26" stop-color="#ff3b22" stop-opacity="0.70"/>
+      <stop offset="0.5" stop-color="#ff7a5c"/>
+      <stop offset="0.74" stop-color="#ff3b22" stop-opacity="0.70"/>
+      <stop offset="1" stop-color="#ff3b22" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="gemini-iris" x1="255" y1="170" x2="340" y2="300" gradientUnits="userSpaceOnUse">
+    <linearGradient id="gemini-iris" x1="256" y1="180" x2="320" y2="240" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#94c5ff"/>
       <stop offset="0.48" stop-color="#62a0ff"/>
       <stop offset="1" stop-color="#4285f4"/>
     </linearGradient>
-    <linearGradient id="claude-iris" x1="256" y1="270" x2="256" y2="344" gradientUnits="userSpaceOnUse">
+    <linearGradient id="claude-iris" x1="320" y1="214" x2="320" y2="298" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#ffb08e"/>
       <stop offset="0.52" stop-color="#ff8a61"/>
       <stop offset="1" stop-color="#d97757"/>
     </linearGradient>
-    <linearGradient id="chatgpt-iris" x1="256" y1="170" x2="175" y2="302" gradientUnits="userSpaceOnUse">
+    <linearGradient id="chatgpt-iris" x1="320" y1="298" x2="256" y2="336" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#55f0c8"/>
       <stop offset="0.5" stop-color="#20d6a5"/>
       <stop offset="1" stop-color="#10a37f"/>
+    </linearGradient>
+    <linearGradient id="grok-iris" x1="256" y1="336" x2="192" y2="298" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f1f5f9"/>
+      <stop offset="0.5" stop-color="#dde5ee"/>
+      <stop offset="1" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="deepseek-iris" x1="192" y1="298" x2="192" y2="214" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c4b1ff"/>
+      <stop offset="0.5" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="mistral-iris" x1="192" y1="214" x2="256" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffd978"/>
+      <stop offset="0.5" stop-color="#f4c343"/>
+      <stop offset="1" stop-color="#e8b32c"/>
     </linearGradient>
     <clipPath id="eye-shape">
       <circle cx="256" cy="256" r="124"/>
@@ -54,42 +95,32 @@
     stroke="url(#gunmetal)"
     stroke-width="16"
   />
-  <circle cx="256" cy="256" r="130" fill="#151821" opacity="0.9"/>
-  <circle cx="256" cy="256" r="122" fill="none" stroke="#4c2d70" stroke-width="4"/>
-  <circle cx="256" cy="256" r="113" fill="none" stroke="#2d2538" stroke-width="5"/>
+  <circle cx="256" cy="256" r="130" fill="#0a0810" opacity="0.95"/>
+  <circle cx="256" cy="256" r="122" fill="none" stroke="#2a1420" stroke-width="4"/>
+  <circle cx="256" cy="256" r="134" fill="url(#hal-glow)"/>
+  <circle cx="256" cy="256" r="113" fill="none" stroke="#1b1119" stroke-width="5"/>
 
   <!-- A narrow illuminated seam carries the site's violet accent through the steel housing. -->
   <path
     d="M129.6 183A146 146 0 0 1 382.4 183"
     fill="none"
     stroke="url(#violet-seam)"
-    stroke-width="6"
-    stroke-linecap="square"
+    stroke-width="5"
+    stroke-linecap="round"
+    opacity="0.42"
   />
 
-  <!-- Three independent points of view form one iris. -->
+  <!-- Six independent points of view form one iris: one 60-degree wedge per model, in the same
+       order and the same colors the site gives their tiles. Same annulus the three wedges used
+       (outer r=86, inner r=36), so the pupil, limbal ring and housing are untouched. -->
   <g clip-path="url(#eye-shape)" transform="translate(256 256) scale(1.09) translate(-256 -256)">
-  <path
-    d="M256 170a86 86 0 0 1 74.5 129L287.2 274A36 36 0 0 0 256 220Z"
-    fill="url(#gemini-iris)"
-    stroke="#0b0d10"
-    stroke-width="6"
-    stroke-linejoin="miter"
-  />
-  <path
-    d="M330.5 299a86 86 0 0 1-149 0l43.3-25a36 36 0 0 0 62.4 0Z"
-    fill="url(#claude-iris)"
-    stroke="#0b0d10"
-    stroke-width="6"
-    stroke-linejoin="miter"
-  />
-  <path
-    d="M181.5 299A86 86 0 0 1 256 170v50a36 36 0 0 0-31.2 54Z"
-    fill="url(#chatgpt-iris)"
-    stroke="#0b0d10"
-    stroke-width="6"
-    stroke-linejoin="miter"
-  />
+  <path d="M256 170A86 86 0 0 1 330.5 213L287.2 238A36 36 0 0 0 256 220Z" fill="url(#gemini-iris)" stroke="#0b0d10" stroke-width="6" stroke-linejoin="miter"/>
+  <path d="M330.5 213A86 86 0 0 1 330.5 299L287.2 274A36 36 0 0 0 287.2 238Z" fill="url(#claude-iris)" stroke="#0b0d10" stroke-width="6" stroke-linejoin="miter"/>
+  <path d="M330.5 299A86 86 0 0 1 256 342L256 292A36 36 0 0 0 287.2 274Z" fill="url(#chatgpt-iris)" stroke="#0b0d10" stroke-width="6" stroke-linejoin="miter"/>
+  <path d="M256 342A86 86 0 0 1 181.5 299L224.8 274A36 36 0 0 0 256 292Z" fill="url(#grok-iris)" stroke="#0b0d10" stroke-width="6" stroke-linejoin="miter"/>
+  <path d="M181.5 299A86 86 0 0 1 181.5 213L224.8 238A36 36 0 0 0 224.8 274Z" fill="url(#deepseek-iris)" stroke="#0b0d10" stroke-width="6" stroke-linejoin="miter"/>
+  <path d="M181.5 213A86 86 0 0 1 256 170L256 220A36 36 0 0 0 224.8 238Z" fill="url(#mistral-iris)" stroke="#0b0d10" stroke-width="6" stroke-linejoin="miter"/>
+  <circle cx="256" cy="256" r="96" fill="url(#iris-falloff)"/>
   </g>
 
   <!-- Radial struts and concentric rings turn the living iris into a machine aperture. -->
@@ -112,16 +143,20 @@
     <circle cx="256" cy="256" r="66" stroke="#0b0d10" stroke-width="3" stroke-dasharray="4 7" opacity="0.38"/>
   </g>
 
-  <!-- A dark limbal ring, engineered pupil, and reflections preserve the real-eye read. -->
-  <circle cx="256" cy="256" r="94" fill="none" stroke="#151119" stroke-width="8"/>
-  <circle cx="256" cy="256" r="39" fill="#26212b"/>
-  <circle cx="256" cy="256" r="34" fill="#0b0d10"/>
-  <circle cx="272" cy="238" r="10" fill="#ffffff"/>
-  <circle cx="247" cy="270" r="5" fill="#ffffff" opacity="0.72"/>
+  <!-- A dark limbal ring and a black pupil holding one hot amber point - the HAL read. The
+       off-centre white catchlights that used to sit here made it a cartoon eyeball; a lens has
+       a specular arc across the glass instead, and its light source dead centre. -->
+  <circle cx="256" cy="256" r="94" fill="none" stroke="#120d14" stroke-width="8"/>
+  <circle cx="256" cy="256" r="39" fill="#17131c"/>
+  <circle cx="256" cy="256" r="34" fill="#030204"/>
+  <circle cx="256" cy="256" r="30" fill="url(#hal-core)" opacity="0.55"/>
+  <circle cx="256" cy="256" r="11" fill="url(#hal-core)"/>
+  <circle cx="256" cy="256" r="4.5" fill="#fffdf4"/>
+  <path d="M168 232a92 92 0 0 1 60-56" fill="none" stroke="url(#lens-specular)" stroke-width="13" stroke-linecap="round"/>
 
   <!-- Amber status lamps echo the instruments in the generated artwork. -->
-  <circle cx="369" cy="256" r="4" fill="#ffb33b"/>
-  <circle cx="377" cy="266" r="2.5" fill="#ffd27a"/>
+  <circle cx="369" cy="256" r="4" fill="#ff4a2e"/>
+  <circle cx="377" cy="266" r="2.5" fill="#ff8f6b"/>
 
   </g>
 </svg>
