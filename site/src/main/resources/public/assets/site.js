@@ -13,6 +13,13 @@
   var archiveItems = [];
   var archiveShown = 0;
   var latestVersion = null;
+  var filteredArchive = [];
+  var latestItems = [];
+  var dialogItems = [];
+  var activePiece = null;
+  var filterEl = document.getElementById("artist-filter");
+  var archiveCountEl = document.getElementById("archive-count");
+  var copyBtn = document.getElementById("copy-piece-link");
 
   var nextPieceEl = document.getElementById("next-piece");
   if (nextPieceEl) {
@@ -20,40 +27,46 @@
     setInterval(updateNextPieceCountdown, 60000);
   }
 
-  if (!bucket) {
-    heroEl.innerHTML = "<p class=\"empty\">Gallery not configured yet &mdash; set GCS_BUCKET on the site service.</p>";
-    return;
+  function loadGallery() {
+    heroEl.setAttribute("aria-busy", "true");
+    heroEl.innerHTML = '<p class="loading">Loading the latest collection&hellip;</p>';
+    if (!bucket || bucket.indexOf("{{") === 0) {
+      showGalleryError();
+      return;
+    }
+    // Share the public manifest's one-minute cache across visitors.
+    var manifestUrl = bucket === "__local__" ? "/manifest.json" :
+      "https://storage.googleapis.com/" + bucket + "/manifest.json?v=" + Math.floor(Date.now() / 60000);
+    fetch(manifestUrl)
+      .then(function (response) {
+        if (!response.ok) throw new Error("manifest fetch failed: " + response.status);
+        return response.json();
+      })
+      .then(renderGallery)
+      .catch(showGalleryError)
+      .finally(function () { heroEl.setAttribute("aria-busy", "false"); });
   }
 
-  // Cache-bust by minute, not by request: manifest.json is served with a 60s server-side
-  // cache lifetime (see GcsGalleryStore), so bucketing to the same window lets every visitor
-  // within that minute share one cached fetch instead of each forcing a fresh origin read.
-  var cacheBucket = Math.floor(Date.now() / 60000);
-  var manifestUrl = bucket === "__local__"
-    ? "/manifest.json"
-    : "https://storage.googleapis.com/" + bucket + "/manifest.json?v=" + cacheBucket;
+  function showGalleryError() {
+    heroEl.setAttribute("aria-busy", "false");
+    heroEl.innerHTML = '<div class="empty"><p>The gallery could not load. Please try again.</p>' +
+      '<button type="button" class="retry-button">Try again</button></div>';
+    heroEl.querySelector(".retry-button").addEventListener("click", loadGallery);
+    archiveCountEl.textContent = "The archive will appear when the gallery reconnects.";
+  }
 
-  fetch(manifestUrl)
-    .then(function (response) {
-      if (!response.ok) {
-        throw new Error("manifest fetch failed: " + response.status);
-      }
-      return response.json();
-    })
-    .then(renderGallery)
-    .catch(function () {
-      heroEl.innerHTML = "<p class=\"empty\">No artwork has been generated yet &mdash; check back after next week's AI news roundup.</p>";
-    });
+  loadGallery();
 
   function renderGallery(manifest) {
     var entries = (manifest && manifest.entries) || [];
     if (entries.length === 0) {
       heroEl.innerHTML = "<p class=\"empty\">No artwork has been generated yet &mdash; check back after next week's AI news roundup.</p>";
+      archiveCountEl.textContent = "Earlier collections will appear here after the first week.";
       return;
     }
 
     var latest = entries[0];
-    var latestItems = toItems(latest);
+    latestItems = toItems(latest);
     latestItems.forEach(registerPiece);
     heroEl.innerHTML = latestItems.length === 0
       ? "<p class=\"empty\">No artwork has been generated yet &mdash; check back after next week's AI news roundup.</p>"
@@ -61,6 +74,8 @@
     if (latestItems.length > 0) {
       injectStructuredData(latest, latestItems);
     }
+    document.getElementById("latest-meta").textContent = latest.version + " / " + latestItems.length +
+      (latestItems.length === 1 ? " piece" : " pieces");
     latestVersion = latest.version;
     updateNextPieceCountdown();
 
@@ -71,21 +86,35 @@
         archiveItems.push(item);
       });
     });
+    var artists = Array.from(new Set(archiveItems.map(function (item) { return item.piece.artist; })));
+    filterEl.innerHTML = '<option value="">All models</option>' + artists.map(function (artist) {
+      return '<option value="' + escapeAttr(artist) + '">' + escapeHtml(artist) + '</option>';
+    }).join("");
+    filterEl.disabled = artists.length === 0;
+    filterArchive();
+    openPieceFromHash();
+  }
+
+  filterEl.addEventListener("change", filterArchive);
+
+  function filterArchive() {
+    filteredArchive = archiveItems.filter(function (item) {
+      return !filterEl.value || item.piece.artist === filterEl.value;
+    });
     archiveShown = 0;
-    if (archiveItems.length === 0) {
-      gridEl.innerHTML = "<p class=\"empty\">This is the first week &mdash; the archive will grow with each new week.</p>";
-      openPieceFromHash();
-      return;
+    gridEl.innerHTML = "";
+    loadMoreEl.innerHTML = "";
+    if (!filteredArchive.length) {
+      gridEl.innerHTML = '<p class="empty">The archive will grow with each new week.</p>';
     }
     renderNextArchivePage();
-    // Every piece is registered above regardless of archive pagination, so a deep link into a
-    // week that hasn't been paged in yet still opens.
-    openPieceFromHash();
   }
 
   /** Opens whichever piece the URL fragment names, if it names one we have. */
   function openPieceFromHash() {
-    var slug = decodeURIComponent(String(location.hash || "").replace(/^#/, ""));
+    var slug;
+    try { slug = decodeURIComponent(String(location.hash || "").replace(/^#/, "")); }
+    catch (error) { return false; }
     if (!slug) {
       return false;
     }
@@ -93,7 +122,12 @@
     if (!item) {
       return false;
     }
-    openPieceDialog(item, false);
+    if (!dialogEl.open || activePiece !== item) {
+      dialogItems = toItems(item.entry).map(function (sibling) {
+        return piecesByKey[pieceKey(sibling.entry, sibling.piece)];
+      });
+      openPieceDialog(item, false);
+    }
     return true;
   }
 
@@ -115,38 +149,36 @@
   }
 
   function renderNextArchivePage() {
-    var end = Math.min(archiveShown + ARCHIVE_PAGE_SIZE, archiveItems.length);
-    var newCards = archiveItems.slice(archiveShown, end).map(renderCard).join("");
-    gridEl.insertAdjacentHTML("beforeend", newCards);
+    var previousCount = archiveShown;
+    var end = Math.min(archiveShown + ARCHIVE_PAGE_SIZE, filteredArchive.length);
+    gridEl.insertAdjacentHTML("beforeend", filteredArchive.slice(archiveShown, end).map(renderCard).join(""));
     archiveShown = end;
-
-    var remaining = archiveItems.length - archiveShown;
-    if (remaining <= 0) {
-      loadMoreEl.innerHTML = "";
-      return;
-    }
-    loadMoreEl.innerHTML =
-      "<button type=\"button\" class=\"load-more\">Load " +
-      Math.min(remaining, ARCHIVE_PAGE_SIZE) + " more &mdash; " + remaining + " earlier " +
-      (remaining === 1 ? "piece" : "pieces") + "</button>";
-    loadMoreEl.querySelector(".load-more").addEventListener("click", renderNextArchivePage);
+    archiveCountEl.textContent = archiveItems.length ? "Showing " + archiveShown + " of " + filteredArchive.length +
+      " earlier pieces" + (filterEl.value ? " by " + filterEl.value : " across all models") + "." :
+      "The first collection is on display above. More to come.";
+    var remaining = filteredArchive.length - archiveShown;
+    loadMoreEl.innerHTML = remaining > 0 ? '<button type="button" class="load-more">Load ' +
+      Math.min(remaining, ARCHIVE_PAGE_SIZE) + ' more pieces <span aria-hidden="true">&darr;</span></button>' : "";
+    if (remaining > 0) loadMoreEl.querySelector("button").addEventListener("click", renderNextArchivePage);
+    // Move focus to the first newly revealed piece when the paging control is replaced.
+    if (previousCount > 0) gridEl.children[previousCount].focus({ preventScroll: true });
   }
 
   function renderShowcase(entry, items) {
-    var tiles = items.map(function (item) {
+    return '<div class="showcase-grid">' + items.map(function (item) {
       return renderShowcaseTile(entry, item.piece);
-    }).join("");
-    return (
-      "<div class=\"showcase-grid\">" + tiles + "</div>" +
-      "<p class=\"version-line\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") + "</p>" +
-      "<p class=\"disclosure\">Gemini, Claude, ChatGPT, Grok, DeepSeek and Mistral each research " +
-      "this week's AI news and write their own prompt and rationale independently, from one " +
-      "identical brief &mdash; every image is rendered by Gemini's image model (nano banana), so " +
-      "the only variable between them is the opinion, not the medium. Five search the web with " +
-      "their own lab's tool; DeepSeek's API has none, so its research runs through Tavily.</p>" +
-      renderHighlights(entry) +
-      "<p class=\"source-line\"><a href=\"" + escapeAttr(entry.sourceUrl || "#") + "\" target=\"_blank\" rel=\"noopener\">Explore this week's AI news sources &#8599;</a></p>"
-    );
+    }).join("") + '</div>' +
+      '<div class="collection-note"><p>News from ' + escapeHtml(formatDateRange(entry.date)) +
+      '. All images rendered by Gemini.</p><a href="#about-full">About the experiment &nearr;</a></div>' +
+      renderHighlights(entry);
+  }
+
+  function formatDateRange(value) {
+    return String(value || "this week").replace(/(\d{4})-(\d{2})-(\d{2})/g, function (match, year, month, day) {
+      return new Date(Date.UTC(+year, +month - 1, +day)).toLocaleDateString("en-US", {
+        month: "short", day: "numeric", year: "numeric", timeZone: "UTC"
+      });
+    }).replace(" to ", " – ");
   }
 
   /** One CSS class per model (see the --artist-* colors in styles.css) so its border and label
@@ -216,58 +248,96 @@
   }
 
   function renderShowcaseTile(entry, piece) {
-    return (
-      "<button type=\"button\" class=\"showcase-tile " + artistClass(piece.artist) + "\" data-key=\"" +
-      escapeAttr(pieceKey(entry, piece)) + "\">" +
-      "<img src=\"" + escapeAttr(thumbnailUrl(piece)) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
-      "\" width=\"800\" height=\"436\" fetchpriority=\"high\" decoding=\"async\" />" +
-      "<span class=\"artist-label\">" + escapeHtml(modelLabel(piece)) + "</span>" +
-      "</button>"
-    );
+    return '<button type="button" class="showcase-tile ' + artistClass(piece.artist) + '" data-key="' +
+      escapeAttr(pieceKey(entry, piece)) + '" aria-label="View ' + escapeAttr(piece.artist) +
+      "'s artwork and explanation, " + escapeAttr(entry.version) + '">' +
+      '<img src="' + escapeAttr(thumbnailUrl(piece)) + '" alt="' + escapeAttr(pieceAltText(entry, piece)) +
+      '" width="800" height="436" decoding="async" />' +
+      '<span class="tile-caption"><span><span class="artist-label">' + escapeHtml(piece.artist) +
+      '</span><span class="model-version">' + escapeHtml(modelLabel(piece)) +
+      '</span></span><span class="tile-arrow" aria-hidden="true">&nearr;</span></span></button>';
   }
 
   function renderCard(item) {
     var entry = item.entry;
     var piece = item.piece;
-    return (
-      "<button type=\"button\" class=\"card " + artistClass(piece.artist) + "\" data-key=\"" +
-      escapeAttr(pieceKey(entry, piece)) + "\">" +
-      "<img src=\"" + escapeAttr(thumbnailUrl(piece)) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
-      "\" width=\"800\" height=\"436\" loading=\"lazy\" decoding=\"async\" />" +
-      "<span class=\"card-caption\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(modelLabel(piece)) + "</span>" +
-      "</button>"
-    );
+    return '<button type="button" class="card ' + artistClass(piece.artist) + '" data-key="' +
+      escapeAttr(pieceKey(entry, piece)) + '" aria-label="View ' + escapeAttr(modelLabel(piece)) +
+      "'s artwork and explanation, " + escapeAttr(entry.version) + '">' +
+      '<img src="' + escapeAttr(thumbnailUrl(piece)) + '" alt="' + escapeAttr(pieceAltText(entry, piece)) +
+      '" width="800" height="436" loading="lazy" decoding="async" />' +
+      '<span class="card-caption"><span class="artist-label">' + escapeHtml(piece.artist) +
+      '</span><span class="card-week">' + escapeHtml(entry.version) + '</span></span></button>';
   }
 
   function openPieceDialog(item, pushUrl) {
     var entry = item.entry;
     var piece = item.piece;
-    if (pushUrl !== false) {
-      // A new history entry rather than a replace, so Back closes the piece instead of leaving
-      // the site - which is what someone who arrived by clicking a tile expects.
-      history.pushState({ piece: pieceKey(entry, piece) }, "", "#" + pieceKey(entry, piece));
+    activePiece = item;
+    if (pushUrl) {
+      history.pushState({ mwPiece: true }, "", "#" + pieceKey(entry, piece));
     }
+    var position = dialogItems.indexOf(item);
+    document.getElementById("piece-position").textContent = (position + 1) + " / " + dialogItems.length;
+    document.getElementById("piece-prev").disabled = position <= 0;
+    document.getElementById("piece-next").disabled = position >= dialogItems.length - 1;
+    copyBtn.textContent = "Copy link";
+    document.getElementById("copy-status").textContent = "";
     dialogBodyEl.innerHTML =
-      "<figure class=\"dialog-figure " + artistClass(piece.artist) + "\">" +
-      "<a href=\"" + escapeAttr(piece.imageUrl) + "\" target=\"_blank\" rel=\"noopener\">" +
-      "<img src=\"" + escapeAttr(piece.imageUrl) + "\" alt=\"" + escapeAttr(pieceAltText(entry, piece)) +
-      "\" />" +
-      "</a>" +
-      "<span class=\"artist-label\">" + escapeHtml(modelLabel(piece)) + "</span>" +
-      "</figure>" +
-      "<p class=\"version-line\">" + escapeHtml(entry.version) + " &middot; " + escapeHtml(entry.date || "") +
-      " &middot; " + escapeHtml(modelLabel(piece)) + "</p>" +
-      "<p class=\"prompt-label\">" + escapeHtml(modelLabel(piece)) + "'s prompt</p>" +
-      "<p class=\"prompt\">" + escapeHtml(piece.prompt || "") + "</p>" +
+      '<figure class="dialog-figure"><a href="' + escapeAttr(piece.imageUrl) +
+      '" target="_blank" rel="noopener" aria-label="Open full-resolution artwork in a new tab">' +
+      '<img src="' + escapeAttr(piece.imageUrl) + '" alt="' + escapeAttr(pieceAltText(entry, piece)) +
+      '" width="1408" height="768" /></a></figure>' +
+      '<div class="dialog-content"><h2 id="piece-title">' + escapeHtml(piece.artist) +
+      "'s point of view</h2>" + '<p class="dialog-meta">' + escapeHtml(modelLabel(piece)) +
+      ' &middot; ' + escapeHtml(entry.version) + ' &middot; ' + escapeHtml(formatDateRange(entry.date)) + '</p>' +
       renderRationale(piece) +
+      '<details class="prompt-details"><summary>Read the image prompt</summary><p class="prompt">' +
+      escapeHtml(piece.prompt || "No prompt was published for this piece.") + '</p></details>' +
       renderHighlights(entry) +
-      "<p class=\"source-line\"><a href=\"" + escapeAttr(entry.sourceUrl || "#") + "\" target=\"_blank\" rel=\"noopener\">Explore this week's AI news sources &#8599;</a></p>";
-    // showModal() throws if the dialog is already open, which a Back/Forward between two piece
-    // fragments would otherwise do - the body above has already been swapped either way.
-    if (!dialogEl.open) {
-      dialogEl.showModal();
-    }
+      '<p class="source-line"><a href="' + escapeAttr(piece.imageUrl) +
+      '" target="_blank" rel="noopener">Open full-resolution image &nearr;</a></p>' +
+      '<p id="share-fallback" hidden><label for="piece-share-url">Copy this link</label>' +
+      '<input id="piece-share-url" type="url" readonly /></p></div>';
+    if (!dialogEl.open) dialogEl.showModal();
+    dialogEl.scrollTop = 0;
   }
+
+  function movePiece(direction) {
+    var next = dialogItems[dialogItems.indexOf(activePiece) + direction];
+    if (!next) return;
+    // Keep one history entry for a browsing session so Back returns to the collection.
+    history.replaceState(history.state, "", "#" + pieceKey(next.entry, next.piece));
+    openPieceDialog(next, false);
+  }
+
+  document.getElementById("piece-prev").addEventListener("click", function () { movePiece(-1); });
+  document.getElementById("piece-next").addEventListener("click", function () { movePiece(1); });
+  dialogEl.addEventListener("keydown", function (event) {
+    if (/INPUT|TEXTAREA|SELECT/.test(event.target.tagName) || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      event.preventDefault();
+      movePiece(event.key === "ArrowLeft" ? -1 : 1);
+    }
+  });
+  copyBtn.addEventListener("click", function () {
+    var url = location.href;
+    var item = activePiece;
+    var copy = navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject();
+    copy.then(function () {
+      if (activePiece !== item) return;
+      copyBtn.textContent = "Link copied";
+      document.getElementById("copy-status").textContent = "Link copied to clipboard.";
+    }).catch(function () {
+      if (activePiece !== item) return;
+      document.getElementById("share-fallback").hidden = false;
+      var input = document.getElementById("piece-share-url");
+      input.value = url;
+      input.focus();
+      input.select();
+      document.getElementById("copy-status").textContent = "Select and copy the link below.";
+    });
+  });
 
   function renderRationale(piece) {
     if (!piece.rationale) {
@@ -323,7 +393,7 @@
       var tooltip = (c.source ? c.source + ": " : "") + c.headline;
       html += escapeHtml(text.slice(cursor, r.start));
       html += "<a class=\"citation\" href=\"" + escapeAttr(c.url) + "\" target=\"_blank\" rel=\"noopener\" " +
-        "data-tooltip=\"" + escapeAttr(tooltip) + "\">" + escapeHtml(text.slice(r.start, r.end)) + "</a>";
+        "title=\"" + escapeAttr(tooltip) + "\">" + escapeHtml(text.slice(r.start, r.end)) + "</a>";
       cursor = r.end;
     });
     html += escapeHtml(text.slice(cursor));
@@ -350,6 +420,7 @@
     if (!item) {
       return;
     }
+    dialogItems = event.currentTarget === heroEl ? latestItems : filteredArchive;
     openPieceDialog(item, true);
   }
 
@@ -361,29 +432,28 @@
   }
 
   if (dialogEl) {
-    // Takes the piece fragment back off the URL once the dialog is gone. Hung on both events
-    // on purpose: Escape fires "cancel" and, observed on the live site, can close the dialog
-    // without ever firing "close" - listening only for the latter left a stale permalink in the
-    // address bar, so the next share or reload reopened a piece the reader had dismissed.
     function clearPieceUrl() {
-      if (location.hash) {
-        history.pushState(null, "", location.pathname + location.search);
-      }
+      var slug;
+      try { slug = decodeURIComponent(location.hash.slice(1)); } catch (error) { return; }
+      if (!piecesByKey[slug]) return;
+      if (history.state && history.state.mwPiece) history.back();
+      else history.replaceState(null, "", location.pathname + location.search);
     }
-
     dialogEl.addEventListener("close", clearPieceUrl);
-    dialogEl.addEventListener("cancel", clearPieceUrl);
-
-    window.addEventListener("popstate", function () {
-      if (!openPieceFromHash() && dialogEl.open) {
-        dialogEl.close();
-      }
+    dialogEl.addEventListener("cancel", function (event) {
+      event.preventDefault();
+      dialogEl.close();
     });
-
+    function syncDialogWithHash() {
+      if (!openPieceFromHash() && dialogEl.open) dialogEl.close();
+    }
+    window.addEventListener("popstate", syncDialogWithHash);
+    window.addEventListener("hashchange", syncDialogWithHash);
     dialogEl.addEventListener("click", function (event) {
-      if (event.target === dialogEl) {
-        dialogEl.close();
-      }
+      if (event.target !== dialogEl) return;
+      var rect = dialogEl.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right ||
+          event.clientY < rect.top || event.clientY > rect.bottom) dialogEl.close();
     });
     var closeBtn = dialogEl.querySelector(".dialog-close");
     if (closeBtn) {
