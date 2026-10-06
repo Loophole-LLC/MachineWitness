@@ -1,0 +1,6 @@
+{
+  "name": "machinewitness-site-checks",
+  "private": true,
+  "scripts": { "test": "node --test test/*.test.cjs" },
+  "devDependencies": { "jsdom": "^27.0.0" }
+}

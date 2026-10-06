@@ -1,0 +1,6 @@
+node_modules/
+target/
+test/
+tools/
+package*.json
+.DS_Store

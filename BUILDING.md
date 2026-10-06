@@ -34,6 +34,19 @@ PORT=8080 GCS_BUCKET=your-test-bucket java -jar target/machinewitness-site-1.0.0
 # -> http://localhost:8080
 ```
 
+The gallery interaction checks use Node 20.19+ (or 22.12+) and jsdom, only for tests; the site
+still ships plain HTML, CSS, and JavaScript with no frontend build step:
+
+```bash
+cd site
+npm ci
+npm test
+```
+
+The checks cover archive filtering and pagination, piece navigation, URL history, sharing,
+network recovery, and older or partial collections. They do not replace a browser check of
+responsive layout or native dialog focus behavior.
+
 The master logo is `site/src/main/resources/public/assets/logo.svg`. After editing it, rebuild
 the favicon, app icon, Instagram profile image, and social preview together (requires
 `rsvg-convert` and Python with Pillow):
