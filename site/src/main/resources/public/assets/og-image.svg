@@ -1,44 +1,65 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 630">
-  <title>Machine Witness social preview</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<title>Machine Witness — Six points of view</title>
+<rect width="1200" height="630" fill="#0c0e10"/>
+<rect x="28" y="28" width="1144" height="574" rx="3" fill="none" stroke="#303438"/>
+<svg xmlns="http://www.w3.org/2000/svg" x="65" y="112" width="400" height="400" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Machine Witness</title>
+  <desc id="desc">A HAL-inspired red camera eye in a silver and black housing. Six colors form its iris: Gemini blue, Claude clay, ChatGPT green, Grok silver, DeepSeek violet, and Mistral gold.</desc>
   <defs>
-    <radialGradient id="card-bg" cx="30%" cy="50%" r="85%">
-      <stop offset="0" stop-color="#171120"/>
-      <stop offset="0.5" stop-color="#0b0d10"/>
-      <stop offset="1" stop-color="#050608"/>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#e2e4e3"/><stop offset=".2" stop-color="#656b70"/>
+      <stop offset=".48" stop-color="#23282c"/><stop offset=".73" stop-color="#858b8e"/><stop offset="1" stop-color="#34393e"/>
+    </linearGradient>
+    <radialGradient id="glass">
+      <stop stop-color="#fff5bf"/><stop offset=".055" stop-color="#ffc66b"/>
+      <stop offset=".14" stop-color="#ff6432"/><stop offset=".32" stop-color="#da2514"/>
+      <stop offset=".62" stop-color="#750b08"/><stop offset=".86" stop-color="#2b0708"/>
+      <stop offset="1" stop-color="#080708"/>
     </radialGradient>
-    <linearGradient id="accent-line" x1="0" x2="1">
-      <stop offset="0" stop-color="#a855f7"/>
-      <stop offset="1" stop-color="#4c2d70" stop-opacity="0"/>
+    <radialGradient id="iris-depth">
+      <stop offset=".76" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".87" stop-color="#000" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".7"/>
+    </radialGradient>
+    <linearGradient id="reflection" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff" stop-opacity=".23"/><stop offset=".6" stop-color="#fff" stop-opacity=".015"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
     </linearGradient>
   </defs>
-
-  <rect width="1200" height="630" fill="url(#card-bg)"/>
-  <rect x="1" y="1" width="1198" height="628" fill="none" stroke="#262b33" stroke-width="2"/>
-
-  <image x="54" y="59" width="512" height="512" xlink:href="icon-1024.png"/>
-
-  <g font-family="Arial, Helvetica, sans-serif">
-    <rect x="620" y="161" width="92" height="8" fill="url(#accent-line)"/>
-    <text x="620" y="257" fill="#e9edf1" font-size="73" font-weight="700" letter-spacing="-2">Machine</text>
-    <text x="620" y="337" fill="#a855f7" font-size="73" font-weight="700" letter-spacing="-2">Witness</text>
-    <text x="623" y="395" fill="#9aa4b2" font-size="27">Six AIs witness the week in AI,</text>
-    <text x="623" y="435" fill="#9aa4b2" font-size="27">then turn their reactions into art.</text>
-
-    <!-- Two rows of three: six names on one line would either overflow the card or shrink the
-         type below what survives a timeline thumbnail. Dots use the same per-model colors as
-         the site's tile borders, defined as the artist custom properties in styles.css. -->
-    <circle cx="630" cy="488" r="8" fill="#4285f4"/>
-    <text x="651" y="497" fill="#9aa4b2" font-size="22">Gemini</text>
-    <circle cx="790" cy="488" r="8" fill="#d97757"/>
-    <text x="811" y="497" fill="#9aa4b2" font-size="22">Claude</text>
-    <circle cx="960" cy="488" r="8" fill="#10a37f"/>
-    <text x="981" y="497" fill="#9aa4b2" font-size="22">ChatGPT</text>
-
-    <circle cx="630" cy="533" r="8" fill="#cbd5e1"/>
-    <text x="651" y="542" fill="#9aa4b2" font-size="22">Grok</text>
-    <circle cx="790" cy="533" r="8" fill="#8b5cf6"/>
-    <text x="811" y="542" fill="#9aa4b2" font-size="22">DeepSeek</text>
-    <circle cx="960" cy="533" r="8" fill="#e8b32c"/>
-    <text x="981" y="542" fill="#9aa4b2" font-size="22">Mistral</text>
-  </g>
+  <!-- Silver bezel, recessed black barrel, then one continuous glass eye. -->
+  <circle cx="256" cy="256" r="239" fill="#050607"/>
+  <circle cx="256" cy="256" r="229" fill="url(#metal)"/>
+  <circle cx="256" cy="256" r="217" fill="#080a0c" stroke="#b5b9bb" stroke-opacity=".22" stroke-width="2"/>
+  <circle cx="256" cy="256" r="201" fill="#111316" stroke="#303338" stroke-width="2"/>
+  <circle cx="256" cy="256" r="185" fill="#060709" stroke="#1c1f22" stroke-width="8"/>
+  <circle cx="256" cy="256" r="166" fill="#030405" stroke="#64676a" stroke-opacity=".5" stroke-width="2"/>
+  <!-- The model palette lives in the iris, leaving the red optical core dominant. -->
+    <path d="M258.792 96.024 A160 160 0 0 1 393.147 173.594 L372.575 185.955 A136 136 0 0 0 258.374 120.021Z" fill="#4285f4"/>
+    <path d="M395.939 178.430 A160 160 0 0 1 395.939 333.570 L374.948 321.934 A136 136 0 0 0 374.948 190.066Z" fill="#d97757"/>
+    <path d="M393.147 338.406 A160 160 0 0 1 258.792 415.976 L258.374 391.979 A136 136 0 0 0 372.575 326.045Z" fill="#10a37f"/>
+    <path d="M253.208 415.976 A160 160 0 0 1 118.853 338.406 L139.425 326.045 A136 136 0 0 0 253.626 391.979Z" fill="#cbd5e1"/>
+    <path d="M116.061 333.570 A160 160 0 0 1 116.061 178.430 L137.052 190.066 A136 136 0 0 0 137.052 321.934Z" fill="#8b5cf6"/>
+    <path d="M118.853 173.594 A160 160 0 0 1 253.208 96.024 L253.626 120.021 A136 136 0 0 0 139.425 185.955Z" fill="#e8b32c"/>
+  <circle cx="256" cy="256" r="160" fill="url(#iris-depth)"/>
+  <circle cx="256" cy="256" r="135" fill="url(#glass)" stroke="#070708" stroke-width="3"/>
+  <circle cx="256" cy="256" r="126" fill="none" stroke="#e44224" stroke-opacity=".14"/>
+  <circle cx="256" cy="256" r="11" fill="#ffd08a"/>
+  <circle cx="256" cy="256" r="5" fill="#fff8d7"/>
+  <!-- A restrained glass reflection, rather than eyeball catchlights. -->
+  <path d="M115 209 A148 148 0 0 1 360 155 Q231 124 115 209Z" fill="url(#reflection)"/>
+  <path d="M88 197 A179 179 0 0 1 226 79" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="3" stroke-linecap="round"/>
 </svg>
+
+<g font-family="Arial, Helvetica, sans-serif">
+  <text x="530" y="153" fill="#a8adb3" font-size="16" letter-spacing="3">AN EXPERIMENT IN AI &amp; ART</text>
+  <text x="527" y="247" fill="#f0eee8" font-family="Georgia, serif" font-size="66" letter-spacing="-2">Machine Witness</text>
+  <text x="530" y="311" fill="#d3d0c9" font-size="29">One week. Six points of view.</text>
+  <text x="530" y="366" fill="#a8adb3" font-size="21">Six AI models turn the same news into art.</text>
+  <text x="530" y="400" fill="#a8adb3" font-size="21">Every piece. Every perspective. Every week.</text>
+  <circle cx="537" cy="456" r="6" fill="#4285f4"/><text x="553" y="462" fill="#a8adb3" font-size="17">Gemini</text>
+  <circle cx="705" cy="456" r="6" fill="#d97757"/><text x="721" y="462" fill="#a8adb3" font-size="17">Claude</text>
+  <circle cx="885" cy="456" r="6" fill="#10a37f"/><text x="901" y="462" fill="#a8adb3" font-size="17">ChatGPT</text>
+  <circle cx="537" cy="493" r="6" fill="#cbd5e1"/><text x="553" y="499" fill="#a8adb3" font-size="17">Grok</text>
+  <circle cx="705" cy="493" r="6" fill="#8b5cf6"/><text x="721" y="499" fill="#a8adb3" font-size="17">DeepSeek</text>
+  <circle cx="885" cy="493" r="6" fill="#e8b32c"/><text x="901" y="499" fill="#a8adb3" font-size="17">Mistral</text>
+  <text x="530" y="557" fill="#a8adb3" font-size="15" letter-spacing="2">MACHINEWITNESS.ART</text>
+</g></svg>

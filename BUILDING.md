@@ -34,6 +34,14 @@ PORT=8080 GCS_BUCKET=your-test-bucket java -jar target/machinewitness-site-1.0.0
 # -> http://localhost:8080
 ```
 
+The master logo is `site/src/main/resources/public/assets/logo.svg`. After editing it, rebuild
+the favicon, app icon, Instagram profile image, and social preview together (requires
+`rsvg-convert` and Python with Pillow):
+
+```bash
+python3 site/tools/build-brand-assets.py
+```
+
 ```bash
 # Build the generator
 cd generator && mvn -q package
