@@ -88,29 +88,7 @@ public final class Main {
         WeeklyDigest digest = new WeeklyDigest(weekId, weekLabel, feedDigests, total);
         System.out.println("Found " + total + " headlines across " + feedDigests.size() + " sources for " + weekId);
 
-        // Six independent takes on one brief. Gemini is unconditional - it renders every
-        // image regardless of who wrote the prompt, so its key is the one hard requirement.
-        Map<String, ArtDirectionWriter> writers = new LinkedHashMap<>();
-        writers.put("gemini", new GeminiArtDirectionWriter(config.geminiApiKey(), config.geminiModel()));
-        addIfKeyed(writers, "claude", "Claude", "ANTHROPIC_API_KEY", config.anthropicApiKey(),
-                () -> new ClaudeArtDirectionWriter(config.anthropicApiKey(), config.anthropicModel()));
-        addIfKeyed(writers, "chatgpt", "ChatGPT", "OPENAI_API_KEY", config.openaiApiKey(),
-                () -> new OpenAiArtDirectionWriter(config.openaiApiKey(), config.openaiModel()));
-        addIfKeyed(writers, "grok", "Grok", "XAI_API_KEY", config.xaiApiKey(),
-                () -> new GrokArtDirectionWriter(config.xaiApiKey(), config.xaiModel()));
-        // DeepSeek is the one model with no web search of its own, so it needs a search key on
-        // top of its own - without one it would be answering a different brief than the rest.
-        if (config.deepseekApiKey() != null && !config.deepseekApiKey().isBlank()
-                && (config.tavilyApiKey() == null || config.tavilyApiKey().isBlank())) {
-            System.out.println("Skipping DeepSeek - DEEPSEEK_API_KEY is set but TAVILY_API_KEY "
-                    + "isn't, and DeepSeek has no web search of its own to fall back on.");
-        } else {
-            addIfKeyed(writers, "deepseek", "DeepSeek", "DEEPSEEK_API_KEY", config.deepseekApiKey(),
-                    () -> new DeepSeekArtDirectionWriter(
-                            config.deepseekApiKey(), config.deepseekModel(), config.tavilyApiKey()));
-        }
-        addIfKeyed(writers, "mistral", "Mistral", "MISTRAL_API_KEY", config.mistralApiKey(),
-                () -> new MistralArtDirectionWriter(config.mistralApiKey(), config.mistralModel()));
+        Map<String, ArtDirectionWriter> writers = writers(config);
 
         // Looked up by exact headline title so a citation can only ever point at a real item from
         // this week's actual feeds, never a model-hallucinated one - see resolveCitations().
@@ -197,6 +175,38 @@ public final class Main {
     }
 
     /**
+     * Every model that has a key this run, keyed by slug, in the order their pieces are
+     * published. Public so a maintenance tool can rerun one model with exactly the production
+     * setup - see tools.AddMissingPiece.
+     */
+    public static Map<String, ArtDirectionWriter> writers(Config config) {
+        Map<String, ArtDirectionWriter> writers = new LinkedHashMap<>();
+        // Six independent takes on one brief. Gemini is unconditional - it renders every
+        // image regardless of who wrote the prompt, so its key is the one hard requirement.
+        writers.put("gemini", new GeminiArtDirectionWriter(config.geminiApiKey(), config.geminiModel()));
+        addIfKeyed(writers, "claude", "Claude", "ANTHROPIC_API_KEY", config.anthropicApiKey(),
+                () -> new ClaudeArtDirectionWriter(config.anthropicApiKey(), config.anthropicModel()));
+        addIfKeyed(writers, "chatgpt", "ChatGPT", "OPENAI_API_KEY", config.openaiApiKey(),
+                () -> new OpenAiArtDirectionWriter(config.openaiApiKey(), config.openaiModel()));
+        addIfKeyed(writers, "grok", "Grok", "XAI_API_KEY", config.xaiApiKey(),
+                () -> new GrokArtDirectionWriter(config.xaiApiKey(), config.xaiModel()));
+        // DeepSeek is the one model with no web search of its own, so it needs a search key on
+        // top of its own - without one it would be answering a different brief than the rest.
+        if (config.deepseekApiKey() != null && !config.deepseekApiKey().isBlank()
+                && (config.tavilyApiKey() == null || config.tavilyApiKey().isBlank())) {
+            System.out.println("Skipping DeepSeek - DEEPSEEK_API_KEY is set but TAVILY_API_KEY "
+                    + "isn't, and DeepSeek has no web search of its own to fall back on.");
+        } else {
+            addIfKeyed(writers, "deepseek", "DeepSeek", "DEEPSEEK_API_KEY", config.deepseekApiKey(),
+                    () -> new DeepSeekArtDirectionWriter(
+                            config.deepseekApiKey(), config.deepseekModel(), config.tavilyApiKey()));
+        }
+        addIfKeyed(writers, "mistral", "Mistral", "MISTRAL_API_KEY", config.mistralApiKey(),
+                () -> new MistralArtDirectionWriter(config.mistralApiKey(), config.mistralModel()));
+        return writers;
+    }
+
+    /**
      * Adds one model to the weekly comparison if its key is present, and says so in the log if
      * it isn't. Every provider past Gemini is optional on purpose: a model can be added while
      * its key is still being provisioned, or dropped for a week, by one env var.
@@ -218,7 +228,7 @@ public final class Main {
      * and the headline must match a real item from this week's feeds (so the link is real, not a
      * model-hallucinated URL). Everything else is silently dropped rather than published broken.
      */
-    private static List<Citation> resolveCitations(List<Citation> raw, String rationale,
+    public static List<Citation> resolveCitations(List<Citation> raw, String rationale,
             Map<String, NewsItem> itemsByHeadline, Map<String, String> sourceByHeadline) {
         List<Citation> resolved = new ArrayList<>();
         for (Citation c : raw) {

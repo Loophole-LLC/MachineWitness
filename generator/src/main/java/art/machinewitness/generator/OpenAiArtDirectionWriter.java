@@ -39,13 +39,15 @@ public final class OpenAiArtDirectionWriter implements ArtDirectionWriter {
                 .build();
 
         Response response = client.responses().create(params);
+        // Last, not first: a model can narrate before it searches ("I'll research the week's
+        // headlines first...") and only give the JSON in a later message, after the tool calls.
         String text = response.output().stream()
                 .filter(ResponseOutputItem::isMessage)
                 .map(ResponseOutputItem::asMessage)
                 .flatMap(message -> message.content().stream())
                 .filter(content -> content.isOutputText())
                 .map(content -> content.asOutputText().text())
-                .findFirst()
+                .reduce((first, second) -> second)
                 .orElseThrow(() -> new IOException("ChatGPT response had no output text"));
 
         return ArtDirectionJson.parse(text, "ChatGPT", model);
