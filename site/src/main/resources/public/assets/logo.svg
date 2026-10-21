@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">Machine Witness</title>
-  <desc id="desc">A HAL-inspired red camera eye in a silver and black housing. Six colors form its iris: Gemini blue, Claude clay, ChatGPT green, Grok silver, DeepSeek violet, and Mistral gold.</desc>
+  <desc id="desc">A HAL-inspired red camera eye in a silver and black housing. Seven colors form its iris: Gemini blue, Claude clay, ChatGPT green, Grok silver, DeepSeek violet, Mistral gold, and Muse pink.</desc>
   <defs>
     <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
       <stop stop-color="#e2e4e3"/><stop offset=".2" stop-color="#656b70"/>
@@ -29,12 +29,13 @@
   <circle cx="256" cy="256" r="185" fill="#060709" stroke="#1c1f22" stroke-width="8"/>
   <circle cx="256" cy="256" r="166" fill="#030405" stroke="#64676a" stroke-opacity=".5" stroke-width="2"/>
   <!-- The model palette lives in the iris, leaving the red optical core dominant. -->
-    <path d="M258.792 96.024 A160 160 0 0 1 393.147 173.594 L372.575 185.955 A136 136 0 0 0 258.374 120.021Z" fill="#4285f4"/>
-    <path d="M395.939 178.430 A160 160 0 0 1 395.939 333.570 L374.948 321.934 A136 136 0 0 0 374.948 190.066Z" fill="#d97757"/>
-    <path d="M393.147 338.406 A160 160 0 0 1 258.792 415.976 L258.374 391.979 A136 136 0 0 0 372.575 326.045Z" fill="#10a37f"/>
-    <path d="M253.208 415.976 A160 160 0 0 1 118.853 338.406 L139.425 326.045 A136 136 0 0 0 253.626 391.979Z" fill="#cbd5e1"/>
-    <path d="M116.061 333.570 A160 160 0 0 1 116.061 178.430 L137.052 190.066 A136 136 0 0 0 137.052 321.934Z" fill="#8b5cf6"/>
-    <path d="M118.853 173.594 A160 160 0 0 1 253.208 96.024 L253.626 120.021 A136 136 0 0 0 139.425 185.955Z" fill="#e8b32c"/>
+    <path d="M258.792 96.024 A160 160 0 0 1 379.333 154.074 L360.833 169.363 A136 136 0 0 0 258.374 120.021Z" fill="#4285f4"/>
+    <path d="M382.815 158.440 A160 160 0 0 1 412.586 288.876 L389.098 283.944 A136 136 0 0 0 363.793 173.074Z" fill="#d97757"/>
+    <path d="M411.343 294.320 A160 160 0 0 1 327.927 398.921 L317.138 377.483 A136 136 0 0 0 388.042 288.572Z" fill="#10a37f"/>
+    <path d="M322.895 401.345 A160 160 0 0 1 189.105 401.345 L199.139 379.543 A136 136 0 0 0 312.861 379.543Z" fill="#cbd5e1"/>
+    <path d="M184.073 398.921 A160 160 0 0 1 100.657 294.320 L123.958 288.572 A136 136 0 0 0 194.862 377.483Z" fill="#8b5cf6"/>
+    <path d="M99.414 288.876 A160 160 0 0 1 129.185 158.440 L148.207 173.074 A136 136 0 0 0 122.902 283.944Z" fill="#e8b32c"/>
+    <path d="M132.667 154.074 A160 160 0 0 1 253.208 96.024 L253.626 120.021 A136 136 0 0 0 151.167 169.363Z" fill="#ec6fae"/>
   <circle cx="256" cy="256" r="160" fill="url(#iris-depth)"/>
   <circle cx="256" cy="256" r="135" fill="url(#glass)" stroke="#070708" stroke-width="3"/>
   <circle cx="256" cy="256" r="126" fill="none" stroke="#e44224" stroke-opacity=".14"/>
