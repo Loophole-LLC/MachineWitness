@@ -94,6 +94,7 @@ needing billing enabled on their own account the same way Gemini does:
 | Grok | `XAI_API_KEY` | [console.x.ai](https://console.x.ai/) |
 | DeepSeek | `DEEPSEEK_API_KEY` | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | Mistral | `MISTRAL_API_KEY` | [console.mistral.ai](https://console.mistral.ai/api-keys/) |
+| Muse | `META_API_KEY` | [dev.meta.ai](https://dev.meta.ai/) |
 
 The generator only asks a model for a piece once its key is set, so it runs fine with just
 Gemini while the rest are being provisioned, and a model can be dropped for a week by unsetting
@@ -107,7 +108,7 @@ feeds the results back - DeepSeek's own index, this project's loop.
 ```bash
 GEMINI_API_KEY=your-key ANTHROPIC_API_KEY=your-key OPENAI_API_KEY=your-key \
   XAI_API_KEY=your-key DEEPSEEK_API_KEY=your-key \
-  MISTRAL_API_KEY=your-key LOCAL_OUT=./out \
+  MISTRAL_API_KEY=your-key META_API_KEY=your-key LOCAL_OUT=./out \
   java -jar generator/target/machinewitness-generator-1.0.0.jar
 ```
 
@@ -145,13 +146,15 @@ every request.
 | `DEEPSEEK_MODEL`  | generator | no (default `deepseek-v4-pro`)       | Writes DeepSeek's art prompt + rationale over OpenAI-compatible chat completions, researched through a client-side `web_search` tool loop against DeepSeek's own search endpoint. |
 | `MISTRAL_API_KEY` | generator | no                                    | Mistral console key. Mistral only joins once this is set. |
 | `MISTRAL_MODEL`   | generator | no (default `mistral-medium-latest`) | Writes Mistral's art prompt + rationale via the agent-less Conversations API (`/v1/conversations`, `store: false`), the only endpoint where Mistral's built-in `web_search` tool is supported. The concrete version the alias resolves to is read back off the response and published as the label. |
+| `META_API_KEY`    | generator | no                                    | Meta Model API key (US-only public preview). Muse only joins once this is set. |
+| `META_MODEL`      | generator | no (default `muse-spark-1.3`)        | Writes Muse's art prompt + rationale. Meta serves an OpenAI-Responses-compatible API, so like Grok this reuses the ChatGPT writer's SDK against `api.meta.ai` with a server-side `web_search` tool. The standard tier, not `-contributor`, which is cheaper because Meta may train on the prompts. |
 | `PORT`            | site      | no (default `8080`)                  | Cloud Run sets this automatically. |
 
 ## Deploying to GCP
 
 This creates real, billable resources (Cloud Run, a Cloud Storage bucket, and paid Gemini,
-Claude, ChatGPT, Grok, DeepSeek and Mistral API calls once the scheduler starts firing
-for real - six models' worth of research and six image renders a week, where this started at
+Claude, ChatGPT, Grok, DeepSeek, Mistral and Meta API calls once the scheduler starts firing
+for real - seven models' worth of research and seven image renders a week, where this started at
 one). Every model also runs live web search as part of its brief, which is the expensive part of
 a run, not the image.
 
@@ -187,7 +190,7 @@ gsutil cors set /tmp/cors.json gs://$BUCKET
 ### 3. API keys as secrets
 
 Gemini is required; every other model is optional - skip its secret (and its binding in step 4,
-and its `--set-secrets` entry in step 6) to run the comparison with fewer than six models.
+and its `--set-secrets` entry in step 6) to run the comparison with fewer than seven models.
 
 ```bash
 echo -n "your-gemini-api-key" | gcloud secrets create gemini-api-key --data-file=-
@@ -196,6 +199,7 @@ echo -n "your-openai-api-key" | gcloud secrets create openai-api-key --data-file
 echo -n "your-xai-api-key" | gcloud secrets create xai-api-key --data-file=-
 echo -n "your-deepseek-api-key" | gcloud secrets create deepseek-api-key --data-file=-
 echo -n "your-mistral-api-key" | gcloud secrets create mistral-api-key --data-file=-
+echo -n "your-meta-api-key" | gcloud secrets create meta-api-key --data-file=-
 ```
 
 ### 4. A dedicated, least-privilege service account for the generator
@@ -209,7 +213,7 @@ gsutil iam ch \
   gs://$BUCKET
 
 for secret in gemini-api-key anthropic-api-key openai-api-key xai-api-key \
-  deepseek-api-key mistral-api-key; do
+  deepseek-api-key mistral-api-key meta-api-key; do
   gcloud secrets add-iam-policy-binding $secret \
     --member="serviceAccount:machinewitness-generator@${PROJECT_ID}.iam.gserviceaccount.com" \
     --role="roles/secretmanager.secretAccessor"
@@ -247,7 +251,7 @@ gcloud run jobs deploy machinewitness-generator \
   --image gcr.io/$PROJECT_ID/machinewitness-generator:<build-id> \
   --region $REGION \
   --service-account machinewitness-generator@${PROJECT_ID}.iam.gserviceaccount.com \
-  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest,OPENAI_API_KEY=openai-api-key:latest,XAI_API_KEY=xai-api-key:latest,DEEPSEEK_API_KEY=deepseek-api-key:latest,MISTRAL_API_KEY=mistral-api-key:latest \
+  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest,OPENAI_API_KEY=openai-api-key:latest,XAI_API_KEY=xai-api-key:latest,DEEPSEEK_API_KEY=deepseek-api-key:latest,MISTRAL_API_KEY=mistral-api-key:latest,META_API_KEY=meta-api-key:latest \
   --set-env-vars GCS_BUCKET=$BUCKET \
   --max-retries 1
 

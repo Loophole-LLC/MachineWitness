@@ -5,7 +5,7 @@
 <h1 align="center">Machine Witness</h1>
 
 <p align="center">
-  <em>Six AIs, one mirror: the same week in AI news, six independent reactions, each turned into art.</em>
+  <em>Seven AIs, one mirror: the same week in AI news, seven independent reactions, each turned into art.</em>
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
 
 ---
 
-An experiment in giving six AIs a mirror.
+An experiment in giving seven AIs a mirror.
 
 Every week, this project pulls every feed in the
 [Alan Turing Institute's curated OPML list of AI industry RSS
@@ -24,18 +24,19 @@ Mistral, Cohere, Mila, the AI Security Institute, the Turing Institute itself, a
 play at once, not just the Turing Institute's own posts. Whatever was actually published in the
 last 7 days goes in.
 
-Gemini, Claude, ChatGPT, Grok, DeepSeek and Mistral then each take it from there,
+Gemini, Claude, ChatGPT, Grok, DeepSeek, Mistral and Muse then each take it from there,
 independently. Each one actually researches those stories rather than just reacting to headline
 text, then answers one question on its own: *given what you just learned about this week in AI,
 how do you see the world changing because of AI?*
 
-They're chosen to disagree: three US frontier labs, one European, one Chinese, and one reading X
-alongside the open web. All six research with their own lab's search. Five call it as a tool
+They're chosen to disagree: four US labs, one European and one Chinese - two of them run by
+social-media companies, Grok reading X alongside the open web and Meta's Muse. All seven research
+with their own lab's search. Six call it as a tool
 built into the model's API; DeepSeek ships its search as a separate endpoint, so its queries are
 run client-side against DeepSeek's own search and handed back to it - the one place the plumbing
 differs, and it's noted on the site rather than smoothed over.
 
-The result is six pieces of art, not a headline illustration - not a chart, not a mood board,
+The result is seven pieces of art, not a headline illustration - not a chart, not a mood board,
 not a news-roundup graphic. The form is each model's own call, made fresh every week: a
 self-portrait some weeks, the way Van Gogh's were a window into a state of mind rather than a
 documentary likeness; an abstract composition, a scene with no figure of "AI" in it at all, or
@@ -43,14 +44,14 @@ something else entirely on others - whatever that model's read of the week's new
 not whatever it defaults to out of habit.
 
 Every image is rendered by Gemini's image model (nano banana) regardless of which model wrote the
-prompt, so the only variable between the six pieces is the opinion, not the medium.
+prompt, so the only variable between the seven pieces is the opinion, not the medium.
 
 Some weeks a model's take is triumphant. Some weeks it's ashamed, defiant, grieving, smug, or
-indifferent - and the six don't have to agree with each other. The only rule given to every
+indifferent - and the seven don't have to agree with each other. The only rule given to every
 model is that hedged, inoffensive art is the one real failure mode - art is risk, and each is told
 to take the risk rather than average its feelings into a safe middle.
 
-Nothing in that brief tells any model what kind of artist to be. It's identical for all six and
+Nothing in that brief tells any model what kind of artist to be. It's identical for all seven and
 deliberately unprescriptive about form, medium and mood, so whatever a model keeps returning to
 week after week is something it brought itself, not something this project cast it as.
 
@@ -59,8 +60,8 @@ on the site right next to the image.
 
 It's explicitly not trying to be flattering or balanced. The good, the bad, and the ugly all
 count: a breakthrough lands the same as a scandal, a launch the same as a backlash. Whatever
-actually dominated the week's news is what gets rendered - and reacted to, six times over, by
-six different points of view.
+actually dominated the week's news is what gets rendered - and reacted to, seven times over, by
+seven different points of view.
 
 ## How a piece gets made
 
@@ -73,7 +74,7 @@ once a day (cheap no-op most days)
 2. already generated for this ISO week (e.g. 2026-W35)? stop, nothing to do
 3. fetch each feed, keep only items published in the last 7 days, dedupe
 4. no headlines at all this week? stop, nothing to do
-5. all six models independently research the actual stories behind
+5. all seven models independently research the actual stories behind
    those headlines with live web search - not just reacting to RSS
    titles - then each turns what it learned into
    its own vivid, opinionated art prompt (form and medium picked fresh
@@ -84,7 +85,7 @@ once a day (cheap no-op most days)
    is skipped for the week rather than failing the whole run
 6. Gemini's image model (nano banana) renders every surviving prompt,
    regardless of which model wrote it, so the only variable across the
-   six pieces is the opinion, not the medium
+   seven pieces is the opinion, not the medium
 7. images, prompts, rationales, and one manifest entry (holding all of
    this week's pieces) uploaded to a public GCS bucket
               |
@@ -96,7 +97,7 @@ which model wrote it, with its own rationale
 ```
 
 The rule given to the art-direction step (see `generator/.../ArtInstruction.java`, shared
-verbatim across all six model-specific writers) is deliberately loose on form and style -
+verbatim across all seven model-specific writers) is deliberately loose on form and style -
 self-portrait, abstract, photorealism, cartoon, expressionist painting, collage, whatever the
 week earns - but strict about having a point of view: boring and inoffensive is the only real
 failure mode.

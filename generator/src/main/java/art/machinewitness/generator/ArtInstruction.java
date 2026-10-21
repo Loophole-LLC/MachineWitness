@@ -2,8 +2,8 @@ package art.machinewitness.generator;
 
 /**
  * The single creative brief handed to every model in the weekly comparison - Gemini, Claude,
- * ChatGPT, Grok, DeepSeek and Mistral all get this exact same instruction, so the only variable
- * between their six pieces is the model itself, not the wording of the prompt.
+ * ChatGPT, Grok, DeepSeek, Mistral and Muse all get this exact same instruction, so the only
+ * variable between their seven pieces is the model itself, not the wording of the prompt.
  *
  * Deliberately unprescriptive about form, medium and mood, and it stays that way as models are
  * added: nothing here tells any model what kind of artist to be, so a tendency that shows up

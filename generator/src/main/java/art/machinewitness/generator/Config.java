@@ -26,6 +26,8 @@ public record Config(
         String deepseekModel,
         String mistralApiKey,
         String mistralModel,
+        String metaApiKey,
+        String metaModel,
         String gcsBucket,
         String localOutDir
 ) {
@@ -39,6 +41,9 @@ public record Config(
     // Mistral publishes "-latest" aliases rather than a stable flagship id; the Conversations
     // response echoes back the concrete version it resolved to, which is what gets published.
     private static final String DEFAULT_MISTRAL_MODEL = "mistral-medium-latest";
+    // The standard tier, not "-contributor": that one is cheaper because Meta may train on the
+    // prompts, and the brief and the week's research shouldn't be the price of a discount.
+    private static final String DEFAULT_META_MODEL = "muse-spark-1.3";
 
     public static Config fromEnv(String[] args) {
         Map<String, String> env = System.getenv();
@@ -73,6 +78,8 @@ public record Config(
                 env.getOrDefault("DEEPSEEK_MODEL", DEFAULT_DEEPSEEK_MODEL),
                 env.get("MISTRAL_API_KEY"),
                 env.getOrDefault("MISTRAL_MODEL", DEFAULT_MISTRAL_MODEL),
+                env.get("META_API_KEY"),
+                env.getOrDefault("META_MODEL", DEFAULT_META_MODEL),
                 gcsBucket,
                 localOut
         );

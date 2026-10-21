@@ -15,8 +15,8 @@ import java.util.function.Supplier;
 /**
  * Entry point for the Machine Witness generator. Run on a schedule (Cloud Scheduler -> Cloud Run Job in
  * production): once a week, pulls the last 7 days of headlines from the Turing Institute's AI
- * RSS feed list and asks Gemini, Claude, ChatGPT, Grok, DeepSeek and Mistral to each
- * independently turn them into their own piece of art - same headlines, same instruction, six
+ * RSS feed list and asks Gemini, Claude, ChatGPT, Grok, DeepSeek, Mistral and Muse to each
+ * independently turn them into their own piece of art - same headlines, same instruction, seven
  * takes. The brief they get is identical and deliberately unprescriptive about form and style
  * (see ArtInstruction): whatever each model's work has in common with its own past work is
  * something it brought, not something this project told it to be.
@@ -181,7 +181,7 @@ public final class Main {
      */
     public static Map<String, ArtDirectionWriter> writers(Config config) {
         Map<String, ArtDirectionWriter> writers = new LinkedHashMap<>();
-        // Six independent takes on one brief. Gemini is unconditional - it renders every
+        // Seven independent takes on one brief. Gemini is unconditional - it renders every
         // image regardless of who wrote the prompt, so its key is the one hard requirement.
         writers.put("gemini", new GeminiArtDirectionWriter(config.geminiApiKey(), config.geminiModel()));
         addIfKeyed(writers, "claude", "Claude", "ANTHROPIC_API_KEY", config.anthropicApiKey(),
@@ -194,6 +194,8 @@ public final class Main {
                 () -> new DeepSeekArtDirectionWriter(config.deepseekApiKey(), config.deepseekModel()));
         addIfKeyed(writers, "mistral", "Mistral", "MISTRAL_API_KEY", config.mistralApiKey(),
                 () -> new MistralArtDirectionWriter(config.mistralApiKey(), config.mistralModel()));
+        addIfKeyed(writers, "muse", "Muse", "META_API_KEY", config.metaApiKey(),
+                () -> new MuseArtDirectionWriter(config.metaApiKey(), config.metaModel()));
         return writers;
     }
 

@@ -7,13 +7,14 @@
   --text-dim: #a8adb3;
   --accent: #f29780;
   --max-width: 1220px;
-  /* Shared with the six iris segments in logo.svg. */
+  /* The first six are shared with the iris segments in logo.svg. */
   --artist-gemini: #4285f4;
   --artist-claude: #d97757;
   --artist-chatgpt: #10a37f;
   --artist-grok: #cbd5e1;
   --artist-deepseek: #8b5cf6;
   --artist-mistral: #e8b32c;
+  --artist-muse: #ec6fae;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 1.5rem; }
@@ -60,7 +61,12 @@ h1 em { color: #b9b8b3; font-weight: 400; }
 h2 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.65rem, 3vw, 2rem); font-weight: 400; letter-spacing: -.035em; line-height: 1.2; margin: 0; }
 .section-meta { flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; color: var(--text-dim); font-size: .72rem; margin: 0 0 .2rem; }
 .section-intro { color: var(--text-dim); font-size: .85rem; margin: 0 0 1.5rem; }
-.showcase-grid, .gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.3rem; align-items: start; }
+.gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.3rem; align-items: start; }
+/* Flex rather than grid so a short last row is centered instead of leaving a hole on the right.
+   site.js picks showcase-cols-3 or -4 from the week's piece count; narrower screens override. */
+.showcase-grid { --gap: 1.3rem; --cols: 3; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--gap); align-items: flex-start; }
+.showcase-grid.showcase-cols-4 { --cols: 4; }
+.showcase-grid .showcase-tile { flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols)); }
 .showcase-tile, .card { --artist: var(--text-dim); position: relative; display: block; width: 100%; padding: 0; margin: 0; text-align: left; color: var(--text); background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; transition: border-color .18s, transform .18s; }
 .showcase-tile:hover, .card:hover { border-color: var(--artist); transform: translateY(-3px); }
 /* The complete artwork stays visible, including non-landscape archive pieces. */
@@ -71,6 +77,7 @@ h2 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.65rem, 3
 .artist-grok { --artist: var(--artist-grok); }
 .artist-deepseek { --artist: var(--artist-deepseek); }
 .artist-mistral { --artist: var(--artist-mistral); }
+.artist-muse { --artist: var(--artist-muse); }
 .tile-caption { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .9rem 1rem; border-top: 2px solid var(--artist); }
 .artist-label { display: flex; align-items: center; gap: .5rem; color: var(--text); font-size: .9rem; font-weight: 600; }
 .artist-label::before { content: ""; width: 6px; height: 6px; background: var(--artist); border-radius: 50%; flex-shrink: 0; }
@@ -139,7 +146,8 @@ h3 { font-size: 1rem; font-weight: 500; margin: .75rem 0 .5rem; }
   .intro-lens img { width: 180px; height: 180px; }
   .intro-lens figcaption { font-size: .5rem; }
   .section-heading { align-items: flex-start; flex-wrap: wrap; }
-  .showcase-grid, .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .showcase-grid, .showcase-grid.showcase-cols-4 { --cols: 2; }
 }
 @media (max-width: 600px) {
   .wrap { padding: 0 1.2rem; }
@@ -155,7 +163,7 @@ h3 { font-size: 1rem; font-weight: 500; margin: .75rem 0 .5rem; }
   .eyebrow { font-size: .6rem; }
   .tagline { font-size: .9rem; }
   .hero, .gallery, .about { padding: 2.5rem 0; }
-  .showcase-grid { grid-template-columns: minmax(0, 1fr); }
+  .showcase-grid, .showcase-grid.showcase-cols-4 { --cols: 1; }
   .gallery-grid { gap: .8rem; }
   .card-caption { align-items: flex-start; flex-direction: column; gap: .2rem; padding: .65rem; }
   .collection-note { display: block; }

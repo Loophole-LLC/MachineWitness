@@ -10,8 +10,8 @@ import java.util.List;
 /**
  * Parses the {prompt, rationale, citations} object out of a model's reply for every writer that
  * can't be held to a response schema server-side. Gemini and Claude each constrain the shape at
- * the API level (responseSchema / outputConfig) and parse inline; ChatGPT, Grok, DeepSeek and
- * Mistral all come back as free text that merely promises to be JSON, so they share this.
+ * the API level (responseSchema / outputConfig) and parse inline; ChatGPT, Grok, DeepSeek,
+ * Mistral and Muse all come back as free text that merely promises to be JSON, so they share this.
  */
 final class ArtDirectionJson {
 

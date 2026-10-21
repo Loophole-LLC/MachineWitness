@@ -165,12 +165,21 @@
   }
 
   function renderShowcase(entry, items) {
-    return '<div class="showcase-grid">' + items.map(function (item) {
-      return renderShowcaseTile(entry, item.piece);
-    }).join("") + '</div>' +
+    // A class, not an inline style: the CSP's style-src 'self' would drop a style attribute.
+    return '<div class="showcase-grid showcase-cols-' + showcaseColumns(items.length) + '">' +
+      items.map(function (item) {
+        return renderShowcaseTile(entry, item.piece);
+      }).join("") + '</div>' +
       '<div class="collection-note"><p>News from ' + escapeHtml(formatDateRange(entry.date)) +
       '. All images rendered by Gemini.</p><a href="#about-full">About the experiment &nearr;</a></div>' +
       renderHighlights(entry);
+  }
+
+  /** Three or four across, whichever leaves fewer empty slots in the last row: seven pieces sit
+   * 4 + 3 rather than 3 + 3 + 1, six stay 3 + 3, and a week where a model was skipped still
+   * reads as one block. Ties go to three, the larger tiles. */
+  function showcaseColumns(count) {
+    return (4 - count % 4) % 4 < (3 - count % 3) % 3 ? 4 : 3;
   }
 
   function formatDateRange(value) {

@@ -187,6 +187,25 @@ test('network failure is distinct from an empty gallery and retry recovers', asy
   assert.equal($('.retry-button'), null);
 });
 
+test('the showcase picks three or four across so a short last row is the smaller one', async t => {
+  const withPieces = count => {
+    const m = structuredClone(manifest);
+    m.entries = m.entries.slice(0, 1);
+    const pieces = m.entries[0].pieces;
+    pieces.push({ ...pieces[0], artist: 'Muse', model: 'Muse test model', imageUrl: '/images/41-Muse.png', thumbnailUrl: '/thumbs/41-Muse.jpg' });
+    m.entries[0].pieces = pieces.slice(0, count);
+    return m;
+  };
+  for (const [count, cols] of [[7, 4], [6, 3], [5, 3], [4, 4], [3, 3]]) {
+    const { document, $ } = await gallery(t, { manifest: withPieces(count) });
+    assert.equal(document.querySelectorAll('.showcase-tile').length, count);
+    assert.ok($('.showcase-grid').classList.contains(`showcase-cols-${cols}`), `${count} pieces -> ${cols} across`);
+  }
+  const { $ } = await gallery(t, { manifest: withPieces(7) });
+  assert.ok($('[data-key="2026-W41-muse"]').classList.contains('artist-muse'));
+  assert.match(readFileSync(path.join(publicDir, 'assets/styles.css'), 'utf8'), /\.artist-muse \{/);
+});
+
 test('empty and partial collections render without claiming six pieces were published', async t => {
   const empty = await gallery(t, { manifest: { entries: [] } });
   assert.match(empty.$('#hero-art').textContent, /No artwork/);
