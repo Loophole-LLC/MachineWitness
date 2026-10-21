@@ -30,10 +30,10 @@ text, then answers one question on its own: *given what you just learned about t
 how do you see the world changing because of AI?*
 
 They're chosen to disagree: three US frontier labs, one European, one Chinese, and one reading X
-alongside the open web. Five of the six research with their own lab's built-in search tool.
-DeepSeek's API has none, so its searches are run client-side through Tavily and handed back to
-it - the one place this comparison isn't strictly like-for-like, and it's disclosed on the site
-rather than smoothed over.
+alongside the open web. All six research with their own lab's search. Five call it as a tool
+built into the model's API; DeepSeek ships its search as a separate endpoint, so its queries are
+run client-side against DeepSeek's own search and handed back to it - the one place the plumbing
+differs, and it's noted on the site rather than smoothed over.
 
 The result is six pieces of art, not a headline illustration - not a chart, not a mood board,
 not a news-roundup graphic. The form is each model's own call, made fresh every week: a

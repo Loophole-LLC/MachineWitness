@@ -11,10 +11,6 @@ import java.util.Map;
  * always runs. Every other model joins the weekly comparison once its own key is set and is
  * skipped with a log line otherwise, so this still works with one key while the rest are being
  * provisioned, and a provider can be dropped for a week by unsetting one variable.
- *
- * DeepSeek additionally needs TAVILY_API_KEY: it's the only model here with no web search of its
- * own, and a DeepSeek that can't do the reading isn't answering the same brief as the other
- * five - see DeepSeekArtDirectionWriter.
  */
 public record Config(
         String geminiApiKey,
@@ -30,7 +26,6 @@ public record Config(
         String deepseekModel,
         String mistralApiKey,
         String mistralModel,
-        String tavilyApiKey,
         String gcsBucket,
         String localOutDir
 ) {
@@ -78,7 +73,6 @@ public record Config(
                 env.getOrDefault("DEEPSEEK_MODEL", DEFAULT_DEEPSEEK_MODEL),
                 env.get("MISTRAL_API_KEY"),
                 env.getOrDefault("MISTRAL_MODEL", DEFAULT_MISTRAL_MODEL),
-                env.get("TAVILY_API_KEY"),
                 gcsBucket,
                 localOut
         );

@@ -13,35 +13,43 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Web search for the one model in the comparison that has none of its own. Every other writer
- * calls its provider's native, server-side search tool; DeepSeek's API has no such tool, so its
- * research has to be run client-side and handed back to it - see
- * {@link DeepSeekArtDirectionWriter} for why that asymmetry is published rather than hidden.
+ * DeepSeek's own web search, for the one writer whose chat API has no server-side search tool.
+ * DeepSeek publishes search as a separate endpoint on the same key rather than as a tool the
+ * model calls itself, so {@link DeepSeekArtDirectionWriter} runs the loop and hands the results
+ * back - but the index and the ranking are DeepSeek's, the same as every other model here
+ * researching with its own lab's search.
  *
- * <p>Tavily rather than a raw search engine because it returns extracted page content, not just
- * titles and meta descriptions: the brief tells every model that "a headline is not the story",
- * which only means anything if the search results actually contain the story.
+ * <p>Returns each result's {@code summary}, which the API writes for a model to read (~600-800
+ * chars), rather than the full page {@code content}: the brief tells every model that "a headline
+ * is not the story", which only means anything if the results carry the story, and the summary
+ * does without a page of boilerplate per hit.
  */
-final class TavilySearch {
+final class DeepSeekSearch {
 
-    private static final String SEARCH_URL = "https://api.tavily.com/search";
+    private static final String SEARCH_URL = "https://api.deepseek.com/v1/tools/search";
     private static final int MAX_RESULTS = 5;
-    private static final int MAX_CONTENT_CHARS = 1200;
+    /** The endpoint rejects longer queries outright. */
+    private static final int MAX_QUERY_CHARS = 128;
 
     private final HttpClient http = HttpClient.newHttpClient();
     private final String apiKey;
 
-    TavilySearch(String apiKey) {
+    DeepSeekSearch(String apiKey) {
         this.apiKey = apiKey;
     }
 
     /** Returns results already formatted for a model to read, or a plain-text failure note. */
     String search(String query) throws IOException, InterruptedException {
+        if (query.isBlank()) {
+            return "Empty query. Call web_search with something to look up.";
+        }
+        if (query.codePointCount(0, query.length()) > MAX_QUERY_CHARS) {
+            query = query.substring(0, query.offsetByCodePoints(0, MAX_QUERY_CHARS));
+        }
+
         JsonObject body = new JsonObject();
         body.addProperty("query", query);
-        body.addProperty("max_results", MAX_RESULTS);
-        body.addProperty("search_depth", "advanced");
-        body.addProperty("topic", "news");
+        body.addProperty("count", MAX_RESULTS);
 
         HttpRequest request = HttpRequest.newBuilder(URI.create(SEARCH_URL))
                 .header("Content-Type", "application/json")
@@ -67,17 +75,21 @@ final class TavilySearch {
         for (JsonElement element : results) {
             JsonObject result = element.getAsJsonObject();
             out.append("\n- ").append(string(result, "title"));
+            String site = string(result, "site_name");
+            if (!site.isBlank()) {
+                out.append(" (").append(site).append(')');
+            }
             out.append("\n  ").append(string(result, "url"));
-            String published = string(result, "published_date");
+            String published = string(result, "date");
             if (!published.isBlank()) {
                 out.append("\n  published: ").append(published);
             }
-            String content = string(result, "content");
-            if (!content.isBlank()) {
-                if (content.length() > MAX_CONTENT_CHARS) {
-                    content = content.substring(0, MAX_CONTENT_CHARS) + "...";
-                }
-                out.append("\n  ").append(content.replace("\n", " "));
+            String summary = string(result, "summary");
+            if (summary.isBlank()) {
+                summary = string(result, "snippet");
+            }
+            if (!summary.isBlank()) {
+                out.append("\n  ").append(summary.replace("\n", " "));
             }
             out.append('\n');
         }

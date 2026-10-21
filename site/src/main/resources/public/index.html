@@ -138,9 +138,10 @@
         <p>
           They're picked to disagree. Three US frontier labs, one European, one Chinese, and one
           that reads X alongside the open web &mdash; different training, different incentives,
-          and in Grok's case a different corpus to form an opinion from. Five research with their
-          own lab's built-in web search; DeepSeek's API has none, so its searches run through
-          Tavily, which is the one place this comparison isn't perfectly like-for-like.
+          and in Grok's case a different corpus to form an opinion from. All six research with their
+          own lab's web search. DeepSeek's is a separate endpoint rather than a tool built into
+          its chat API, so its searches are run on its behalf and handed back &mdash; the one
+          place the plumbing differs.
         </p>
         <p>
           Each model's answer becomes its own piece. Every image is rendered by Gemini's image

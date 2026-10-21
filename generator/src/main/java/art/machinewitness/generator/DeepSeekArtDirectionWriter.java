@@ -16,17 +16,17 @@ import java.nio.charset.StandardCharsets;
  * Asks DeepSeek to turn this week's real AI-industry headlines into one piece of art - the one
  * model in the comparison that isn't a Silicon Valley lab reasoning about Silicon Valley.
  *
- * <p>It is also the one model here with no web search of its own. DeepSeek's API is
- * OpenAI-compatible chat completions with {@code tools} and JSON output but no server-side
- * search tool, so the brief's "do the reading" step has to be run client-side: this declares a
- * {@code web_search} function, runs whatever queries DeepSeek asks for against
- * {@link TavilySearch}, and feeds the results back until it stops asking. The model still
- * decides what to look up and what to conclude - but its research is mediated by a search
- * provider this project picked, where the other five each use their own lab's.
+ * <p>Like the other five it researches with its own lab's search, but the plumbing differs.
+ * DeepSeek's chat completions API has {@code tools} and JSON output but no server-side search
+ * tool; DeepSeek ships search as a separate endpoint instead. So the brief's "do the reading"
+ * step runs client-side: this declares a {@code web_search} function, runs whatever queries
+ * DeepSeek asks for against {@link DeepSeekSearch}, and feeds the results back until it stops
+ * asking. The model decides what to look up and what to conclude, and DeepSeek's index decides
+ * what it finds - only the loop is this project's.
  *
- * <p>That asymmetry is real and it is disclosed on the site rather than papered over: on a
- * project whose whole claim is that the opinion is the only variable, a quiet difference in how
- * one model gets its facts would be exactly the kind of thing worth being honest about.
+ * <p>That difference is small, but it's still noted on the site: on a project whose whole claim
+ * is that the opinion is the only variable, any difference in how one model gets its facts is
+ * worth being honest about.
  */
 public final class DeepSeekArtDirectionWriter implements ArtDirectionWriter {
 
@@ -38,12 +38,12 @@ public final class DeepSeekArtDirectionWriter implements ArtDirectionWriter {
     private final HttpClient http = HttpClient.newHttpClient();
     private final String apiKey;
     private final String model;
-    private final TavilySearch search;
+    private final DeepSeekSearch search;
 
-    public DeepSeekArtDirectionWriter(String apiKey, String model, String tavilyApiKey) {
+    public DeepSeekArtDirectionWriter(String apiKey, String model) {
         this.apiKey = apiKey;
         this.model = model;
-        this.search = new TavilySearch(tavilyApiKey);
+        this.search = new DeepSeekSearch(apiKey);
     }
 
     @Override

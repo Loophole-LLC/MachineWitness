@@ -92,22 +92,21 @@ needing billing enabled on their own account the same way Gemini does:
 | Claude | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
 | ChatGPT | `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com/api-keys) |
 | Grok | `XAI_API_KEY` | [console.x.ai](https://console.x.ai/) |
-| DeepSeek | `DEEPSEEK_API_KEY` + `TAVILY_API_KEY` | [platform.deepseek.com](https://platform.deepseek.com/api_keys), [tavily.com](https://app.tavily.com/) |
+| DeepSeek | `DEEPSEEK_API_KEY` | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | Mistral | `MISTRAL_API_KEY` | [console.mistral.ai](https://console.mistral.ai/api-keys/) |
 
 The generator only asks a model for a piece once its key is set, so it runs fine with just
 Gemini while the rest are being provisioned, and a model can be dropped for a week by unsetting
 one variable.
 
-DeepSeek is the exception that needs two keys. Every other model researches the week with its
-own lab's built-in web search; DeepSeek's API has no such tool, so its searches are run
-client-side against [Tavily](https://tavily.com) and fed back to it. Without `TAVILY_API_KEY` it
-would be reacting to bare headlines while the other five did the reading, so it's skipped rather
-than run on a different brief.
+DeepSeek researches differently in one respect. Every other model's web search is a tool built
+into its chat API; DeepSeek's chat API has none, and its search is a separate endpoint
+(`/v1/tools/search`) on the same key. So the generator runs DeepSeek's searches client-side and
+feeds the results back - DeepSeek's own index, this project's loop.
 
 ```bash
 GEMINI_API_KEY=your-key ANTHROPIC_API_KEY=your-key OPENAI_API_KEY=your-key \
-  XAI_API_KEY=your-key DEEPSEEK_API_KEY=your-key TAVILY_API_KEY=your-key \
+  XAI_API_KEY=your-key DEEPSEEK_API_KEY=your-key \
   MISTRAL_API_KEY=your-key LOCAL_OUT=./out \
   java -jar generator/target/machinewitness-generator-1.0.0.jar
 ```
@@ -142,9 +141,8 @@ every request.
 | `OPENAI_MODEL`    | generator | no (default `gpt-6-astra`)           | Writes ChatGPT's art prompt + rationale, researched via the Responses API's web search tool. |
 | `XAI_API_KEY`     | generator | no                                    | xAI console key, billing-enabled. Grok only joins once this is set. |
 | `XAI_MODEL`       | generator | no (default `grok-4.7`)              | Writes Grok's art prompt + rationale. xAI serves an OpenAI-Responses-compatible API, so this reuses the ChatGPT writer's SDK against `api.x.ai` with a `web_search` tool - Grok's search reads X alongside the open web. |
-| `DEEPSEEK_API_KEY` | generator | no                                   | DeepSeek platform key. DeepSeek only joins once this **and** `TAVILY_API_KEY` are set. |
-| `DEEPSEEK_MODEL`  | generator | no (default `deepseek-v4-pro`)       | Writes DeepSeek's art prompt + rationale over OpenAI-compatible chat completions, researched through a client-side `web_search` tool loop. |
-| `TAVILY_API_KEY`  | generator | no (required for DeepSeek)           | Search backend for DeepSeek only - the one model here with no web search of its own. Disclosed on the site, since it's the single place the weekly comparison isn't like-for-like. |
+| `DEEPSEEK_API_KEY` | generator | no                                   | DeepSeek platform key. DeepSeek only joins once this is set. Also pays for its web search (`/v1/tools/search`). |
+| `DEEPSEEK_MODEL`  | generator | no (default `deepseek-v4-pro`)       | Writes DeepSeek's art prompt + rationale over OpenAI-compatible chat completions, researched through a client-side `web_search` tool loop against DeepSeek's own search endpoint. |
 | `MISTRAL_API_KEY` | generator | no                                    | Mistral console key. Mistral only joins once this is set. |
 | `MISTRAL_MODEL`   | generator | no (default `mistral-medium-latest`) | Writes Mistral's art prompt + rationale via the agent-less Conversations API (`/v1/conversations`, `store: false`), the only endpoint where Mistral's built-in `web_search` tool is supported. The concrete version the alias resolves to is read back off the response and published as the label. |
 | `PORT`            | site      | no (default `8080`)                  | Cloud Run sets this automatically. |
@@ -152,7 +150,7 @@ every request.
 ## Deploying to GCP
 
 This creates real, billable resources (Cloud Run, a Cloud Storage bucket, and paid Gemini,
-Claude, ChatGPT, Grok, DeepSeek, Mistral and Tavily API calls once the scheduler starts firing
+Claude, ChatGPT, Grok, DeepSeek and Mistral API calls once the scheduler starts firing
 for real - six models' worth of research and six image renders a week, where this started at
 one). Every model also runs live web search as part of its brief, which is the expensive part of
 a run, not the image.
@@ -190,7 +188,6 @@ gsutil cors set /tmp/cors.json gs://$BUCKET
 
 Gemini is required; every other model is optional - skip its secret (and its binding in step 4,
 and its `--set-secrets` entry in step 6) to run the comparison with fewer than six models.
-`tavily-api-key` is DeepSeek's web search and is only needed alongside `deepseek-api-key`.
 
 ```bash
 echo -n "your-gemini-api-key" | gcloud secrets create gemini-api-key --data-file=-
@@ -198,7 +195,6 @@ echo -n "your-anthropic-api-key" | gcloud secrets create anthropic-api-key --dat
 echo -n "your-openai-api-key" | gcloud secrets create openai-api-key --data-file=-
 echo -n "your-xai-api-key" | gcloud secrets create xai-api-key --data-file=-
 echo -n "your-deepseek-api-key" | gcloud secrets create deepseek-api-key --data-file=-
-echo -n "your-tavily-api-key" | gcloud secrets create tavily-api-key --data-file=-
 echo -n "your-mistral-api-key" | gcloud secrets create mistral-api-key --data-file=-
 ```
 
@@ -213,7 +209,7 @@ gsutil iam ch \
   gs://$BUCKET
 
 for secret in gemini-api-key anthropic-api-key openai-api-key xai-api-key \
-  deepseek-api-key tavily-api-key mistral-api-key; do
+  deepseek-api-key mistral-api-key; do
   gcloud secrets add-iam-policy-binding $secret \
     --member="serviceAccount:machinewitness-generator@${PROJECT_ID}.iam.gserviceaccount.com" \
     --role="roles/secretmanager.secretAccessor"
@@ -251,7 +247,7 @@ gcloud run jobs deploy machinewitness-generator \
   --image gcr.io/$PROJECT_ID/machinewitness-generator:<build-id> \
   --region $REGION \
   --service-account machinewitness-generator@${PROJECT_ID}.iam.gserviceaccount.com \
-  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest,OPENAI_API_KEY=openai-api-key:latest,XAI_API_KEY=xai-api-key:latest,DEEPSEEK_API_KEY=deepseek-api-key:latest,TAVILY_API_KEY=tavily-api-key:latest,MISTRAL_API_KEY=mistral-api-key:latest \
+  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest,OPENAI_API_KEY=openai-api-key:latest,XAI_API_KEY=xai-api-key:latest,DEEPSEEK_API_KEY=deepseek-api-key:latest,MISTRAL_API_KEY=mistral-api-key:latest \
   --set-env-vars GCS_BUCKET=$BUCKET \
   --max-retries 1
 

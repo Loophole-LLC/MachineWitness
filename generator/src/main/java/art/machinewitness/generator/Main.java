@@ -190,17 +190,8 @@ public final class Main {
                 () -> new OpenAiArtDirectionWriter(config.openaiApiKey(), config.openaiModel()));
         addIfKeyed(writers, "grok", "Grok", "XAI_API_KEY", config.xaiApiKey(),
                 () -> new GrokArtDirectionWriter(config.xaiApiKey(), config.xaiModel()));
-        // DeepSeek is the one model with no web search of its own, so it needs a search key on
-        // top of its own - without one it would be answering a different brief than the rest.
-        if (config.deepseekApiKey() != null && !config.deepseekApiKey().isBlank()
-                && (config.tavilyApiKey() == null || config.tavilyApiKey().isBlank())) {
-            System.out.println("Skipping DeepSeek - DEEPSEEK_API_KEY is set but TAVILY_API_KEY "
-                    + "isn't, and DeepSeek has no web search of its own to fall back on.");
-        } else {
-            addIfKeyed(writers, "deepseek", "DeepSeek", "DEEPSEEK_API_KEY", config.deepseekApiKey(),
-                    () -> new DeepSeekArtDirectionWriter(
-                            config.deepseekApiKey(), config.deepseekModel(), config.tavilyApiKey()));
-        }
+        addIfKeyed(writers, "deepseek", "DeepSeek", "DEEPSEEK_API_KEY", config.deepseekApiKey(),
+                () -> new DeepSeekArtDirectionWriter(config.deepseekApiKey(), config.deepseekModel()));
         addIfKeyed(writers, "mistral", "Mistral", "MISTRAL_API_KEY", config.mistralApiKey(),
                 () -> new MistralArtDirectionWriter(config.mistralApiKey(), config.mistralModel()));
         return writers;
