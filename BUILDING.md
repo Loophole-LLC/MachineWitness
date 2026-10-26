@@ -253,6 +253,7 @@ gcloud run jobs deploy machinewitness-generator \
   --service-account machinewitness-generator@${PROJECT_ID}.iam.gserviceaccount.com \
   --set-secrets GEMINI_API_KEY=gemini-api-key:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest,OPENAI_API_KEY=openai-api-key:latest,XAI_API_KEY=xai-api-key:latest,DEEPSEEK_API_KEY=deepseek-api-key:latest,MISTRAL_API_KEY=mistral-api-key:latest,META_API_KEY=meta-api-key:latest \
   --set-env-vars GCS_BUCKET=$BUCKET \
+  --task-timeout 3600 \
   --max-retries 1
 
 # One manual test run before scheduling it:
